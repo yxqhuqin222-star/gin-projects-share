@@ -1,0 +1,120 @@
+export const navItems = [
+  { href: "/", label: "首页" },
+  { href: "/#projects", label: "项目" },
+  { href: "/#writing", label: "分享" },
+  { href: "/#contact", label: "联系" },
+];
+
+export const categories = ["人工智能", "应用", "网站服务", "开源项目", "工具", "全部"];
+
+export const projects = [
+  {
+    slug: "rizhuizong",
+    title: "rizhuizong",
+    githubUrl: "https://github.com/yxqhuqin222-star/rizhuizong",
+    liveUrl: "https://rizhuizong.vercel.app",
+    category: "网站服务",
+    role: "主理人",
+    status: "已上线",
+    monogram: "RZ",
+    summary: "数据进度追踪工具，用来查看业务数据、进量和进度变化。",
+    intro: "一个面向业务进度管理的轻量工具，把分散的数据变化整理成更容易查看的进度视图。",
+    roleDescription: "负责需求整理、功能实现、部署和后续迭代。",
+    tags: ["网站服务", "Python", "已上线"],
+    image: "/projects/rizhuizong.png",
+    paragraphs: [
+      "这个项目主要解决数据进度分散、人工核对慢、更新后难以及时查看的问题。它适合用于持续追踪业务数据、进量节奏和阶段性完成度。",
+      "首页展示核心进度，详情页沉淀规则和链接。后续可以继续补充真实截图、数据说明和使用流程，让它更像一个完整的业务小工具。",
+    ],
+  },
+  {
+    slug: "xiaoyuzhou-to-article-qwen",
+    title: "xiaoyuzhou-to-article-qwen",
+    githubUrl: "https://github.com/yxqhuqin222-star/xiaoyuzhou-to-article-qwen",
+    category: "AI",
+    role: "开发者",
+    status: "实验中",
+    monogram: "XA",
+    summary: "把小宇宙播客链接转成可阅读、可沉淀的总结内容。",
+    intro: "一个把音频内容转成结构化文字材料的实验项目，用来减少播客内容复盘成本。",
+    roleDescription: "负责流程设计、脚本实现和内容整理方式验证。",
+    tags: ["AI", "Shell", "内容"],
+    image: "/projects/xiaoyuzhou-to-article-qwen.png",
+    paragraphs: [
+      "播客内容常常听完就过去了，难以变成可检索、可复用的材料。这个项目把小宇宙单集链接转成文字和总结，方便后续整理成文章或笔记。",
+      "当前更像一个自动化实验：先跑通从链接到文字稿、再到摘要整理的链路，后续可以继续补充更稳定的输入输出格式。",
+    ],
+  },
+  {
+    slug: "dingtalk-broadcast-console",
+    title: "dingtalk-broadcast-console",
+    githubUrl: "https://github.com/yxqhuqin222-star/dingtalk-broadcast-console",
+    category: "工具",
+    role: "开发者",
+    status: "开发中",
+    monogram: "DB",
+    summary: "钉钉群播报控制台，用于定时推送消息和日常内容。",
+    intro: "一个面向固定群消息和内容提醒的自动化工具，减少重复发送和遗漏。",
+    roleDescription: "负责播报规则、消息结构和控制台功能实现。",
+    tags: ["工具", "Python", "自动化"],
+    image: "/projects/dingtalk-broadcast-console.png",
+    paragraphs: [
+      "当团队或个人每天都要发送固定内容时，手动发送很容易遗漏，也难以保持格式一致。这个项目把播报内容、时间和发送渠道集中到一个控制台里。",
+      "它适合用于午间新闻、日报提醒、知识卡片等固定内容的自动发送。后续可以继续补充多频道、日志和失败重试能力。",
+    ],
+  },
+  {
+    slug: "pages_shouji",
+    title: "pages_shouji",
+    githubUrl: "https://github.com/yxqhuqin222-star/pages_shouji",
+    category: "应用",
+    role: "开发者",
+    status: "实验中",
+    monogram: "PS",
+    summary: "面向网页展示的前端页面项目，适合沉淀轻量展示页。",
+    intro: "一个用来收集和展示页面内容的前端项目，偏向快速搭建与信息呈现。",
+    roleDescription: "负责页面结构、展示方式和前端实现。",
+    tags: ["应用", "JavaScript", "页面"],
+    image: "/projects/pages_shouji.png",
+    paragraphs: [
+      "这个项目关注的是把零散信息变成可访问的页面。它适合用于临时展示、内容集合、项目说明或轻量网页实验。",
+      "相比复杂系统，它更强调快速落地和可访问性。后续可以继续补充导航、分类和更稳定的内容维护方式。",
+    ],
+  },
+  {
+    slug: "feishu-chat-replay",
+    title: "feishu-chat-replay",
+    githubUrl: "https://github.com/yxqhuqin222-star/feishu-chat-replay",
+    category: "开源项目",
+    role: "开发者",
+    status: "实验中",
+    monogram: "FR",
+    summary: "飞书聊天记录回放页面，用网页方式还原和查看对话内容。",
+    intro: "一个把协作沟通过程网页化的实验项目，让聊天记录更适合复盘和展示。",
+    roleDescription: "负责记录结构、回放页面和前端展示实现。",
+    tags: ["开源项目", "HTML", "回放"],
+    image: "/projects/feishu-chat-replay.png",
+    paragraphs: [
+      "很多讨论过程只停留在聊天软件里，后续复盘时上下文容易丢失。这个项目尝试把飞书聊天记录整理成可回看的网页。",
+      "它适合用于会议记录、协作讨论和项目过程复盘。后续可以继续补充搜索、时间线和重点标注能力。",
+    ],
+  },
+];
+
+export const shares = [
+  {
+    title: "书籍",
+    group: "书籍",
+    summary: "读书笔记、摘录和读完之后真正留下来的想法。",
+  },
+  {
+    title: "AI",
+    group: "AI 笔记",
+    summary: "关于 AI 工具、自动化、Agent 和个人工作流的记录。",
+  },
+  {
+    title: "效率与生活",
+    group: "生活",
+    summary: "把日常经验、复盘和一些小发现整理成可回看的分享。",
+  },
+];

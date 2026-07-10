@@ -1,83 +1,4 @@
-const navItems = [
-  { href: "#top", label: "首页" },
-  { href: "#projects", label: "项目" },
-  { href: "#writing", label: "分享" },
-  { href: "#contact", label: "联系" },
-];
-
-const categories = ["人工智能", "应用", "网站服务", "开源项目", "工具", "全部"];
-
-const projects = [
-  {
-    title: "rizhuizong",
-    href: "https://github.com/yxqhuqin222-star/rizhuizong",
-    live: "https://rizhuizong.vercel.app",
-    category: "网站服务",
-    role: "主理人",
-    status: "已上线",
-    monogram: "RZ",
-    summary: "数据进度追踪工具，用来查看业务数据、进量和进度变化。",
-    tags: ["网站服务", "Python", "已上线"],
-  },
-  {
-    title: "xiaoyuzhou-to-article-qwen",
-    href: "https://github.com/yxqhuqin222-star/xiaoyuzhou-to-article-qwen",
-    category: "AI",
-    role: "开发者",
-    status: "实验中",
-    monogram: "XA",
-    summary: "把小宇宙播客链接转成可阅读、可沉淀的总结内容。",
-    tags: ["AI", "Shell", "内容"],
-  },
-  {
-    title: "dingtalk-broadcast-console",
-    href: "https://github.com/yxqhuqin222-star/dingtalk-broadcast-console",
-    category: "工具",
-    role: "开发者",
-    status: "开发中",
-    monogram: "DB",
-    summary: "钉钉群播报控制台，用于定时推送消息和日常内容。",
-    tags: ["工具", "Python", "自动化"],
-  },
-  {
-    title: "pages_shouji",
-    href: "https://github.com/yxqhuqin222-star/pages_shouji",
-    category: "应用",
-    role: "开发者",
-    status: "实验中",
-    monogram: "PS",
-    summary: "面向网页展示的前端页面项目，适合沉淀轻量展示页。",
-    tags: ["应用", "JavaScript", "页面"],
-  },
-  {
-    title: "feishu-chat-replay",
-    href: "https://github.com/yxqhuqin222-star/feishu-chat-replay",
-    category: "开源项目",
-    role: "开发者",
-    status: "实验中",
-    monogram: "FR",
-    summary: "飞书聊天记录回放页面，用网页方式还原和查看对话内容。",
-    tags: ["开源项目", "HTML", "回放"],
-  },
-];
-
-const shares = [
-  {
-    title: "书籍",
-    group: "书籍",
-    summary: "读书笔记、摘录和读完之后真正留下来的想法。",
-  },
-  {
-    title: "AI",
-    group: "AI 笔记",
-    summary: "关于 AI 工具、自动化、Agent 和个人工作流的记录。",
-  },
-  {
-    title: "效率与生活",
-    group: "生活",
-    summary: "把日常经验、复盘和一些小发现整理成可回看的分享。",
-  },
-];
+import { categories, navItems, projects, shares } from "./site-data";
 
 export default function Home() {
   return (
@@ -85,7 +6,7 @@ export default function Home() {
       <div className="page-shell">
         <header className="site-header" aria-label="站点头部">
           <div className="header-left">
-            <a className="brand" href="#top" aria-label="Gin 首页">
+            <a className="brand" href="/" aria-label="Gin 首页">
               GIN
             </a>
             <nav aria-label="主导航">
@@ -133,10 +54,14 @@ export default function Home() {
           <div className="product-grid">
             {projects.map((project) => (
               <article className="product-card" key={project.title}>
-                <a className="product-visual" href={project.href} target="_blank" rel="noreferrer">
+                <a
+                  className="product-visual"
+                  href={`/product/${project.slug}`}
+                  aria-label={`查看 ${project.title} 项目详情`}
+                >
                   <span>{project.monogram}</span>
                 </a>
-                <a className="product-title" href={project.href} target="_blank" rel="noreferrer">
+                <a className="product-title" href={`/product/${project.slug}`}>
                   {project.title}
                 </a>
                 <p>{project.summary}</p>
@@ -146,14 +71,10 @@ export default function Home() {
                   <strong>{project.status}</strong>
                 </div>
                 <div className="project-links">
-                  <a href={project.href} target="_blank" rel="noreferrer">
+                  <a href={`/product/${project.slug}`}>查看详情</a>
+                  <a href={project.githubUrl} target="_blank" rel="noreferrer">
                     GitHub
                   </a>
-                  {"live" in project && project.live ? (
-                    <a href={project.live} target="_blank" rel="noreferrer">
-                      访问网站
-                    </a>
-                  ) : null}
                 </div>
               </article>
             ))}
