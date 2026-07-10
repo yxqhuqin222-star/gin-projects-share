@@ -42,6 +42,12 @@ export default function ProductPage({ params }: ProductPageProps) {
     );
   }
 
+  const galleryImages = [
+    project.image,
+    project.image.replace(".png", "-2.png"),
+    project.image.replace(".png", "-3.png"),
+  ];
+
   return (
     <main>
       <div className="page-shell detail-shell">
@@ -107,7 +113,15 @@ export default function ProductPage({ params }: ProductPageProps) {
       </div>
 
       <section className="detail-gallery" aria-label="项目图片">
-        <img alt={`${project.title} 项目展示图`} src={project.image} />
+        {galleryImages.map((image, index) => (
+          <figure key={image}>
+            <img
+              alt={`${project.title} 项目展示图 ${index + 1}`}
+              loading={index === 0 ? "eager" : "lazy"}
+              src={image}
+            />
+          </figure>
+        ))}
       </section>
 
       <article className="detail-article">

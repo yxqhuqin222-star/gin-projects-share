@@ -427,17 +427,24 @@ p {
 }
 
 .detail-gallery {
-  width: 100vw;
-  margin-top: 34px;
-  margin-left: calc(50% - 50vw);
+  display: grid;
+  width: min(calc(100% - clamp(56px, 7vw, 120px)), 1680px);
+  gap: 46px;
+  margin: 34px auto 0;
+}
+
+.detail-gallery figure {
+  margin: 0;
   overflow: hidden;
+  background: #101010;
 }
 
 .detail-gallery img {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .detail-article {
@@ -567,6 +574,12 @@ p {
 
   .detail-article {
     padding: 44px 16px 0;
+  }
+
+  .detail-gallery {
+    width: calc(100% - 32px);
+    gap: 22px;
+    margin-top: 28px;
   }
 
   .detail-bottom {
