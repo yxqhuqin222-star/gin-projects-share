@@ -4,7 +4,7 @@ import "./globals.css";
 
 const siteTitle = "Gin - 项目与分享";
 const siteDescription =
-  "Gin 的个人网站，整理自己的项目、工具、网站服务，以及关于书籍、AI、效率和生活的分享。";
+  "Gin 的个人网站，整理自己的项目、工具、网站服务，以及关于书籍、人工智能、效率和生活的分享。";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();

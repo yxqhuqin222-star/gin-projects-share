@@ -7,7 +7,7 @@ export default function Home() {
         <header className="site-header" aria-label="站点头部">
           <div className="header-left">
             <a className="brand" href="/" aria-label="Gin 首页">
-              GIN
+              Gin
             </a>
             <nav aria-label="主导航">
               {navItems.map((item, index) => (
@@ -33,7 +33,7 @@ export default function Home() {
             这里是我自己的项目和一些分享
           </h1>
           <p>
-            欢迎来到我的个人网站。我会把正在做的工具、网站服务、自动化项目，以及后续关于书籍、AI、效率和生活的分享整理在这里。
+            欢迎来到我的个人网站。我会把正在做的工具、网站服务、自动化项目，以及后续关于书籍、人工智能、效率和生活的分享整理在这里。
           </p>
         </section>
 
@@ -73,7 +73,7 @@ export default function Home() {
                 <div className="project-links">
                   <a href={`/product/${project.slug}`}>查看详情</a>
                   <a href={project.githubUrl} target="_blank" rel="noreferrer">
-                    GitHub
+                    代码仓库
                   </a>
                 </div>
               </article>
@@ -84,7 +84,7 @@ export default function Home() {
         <section className="sharing" id="writing" aria-labelledby="sharing-title">
           <div className="section-copy">
             <h2 id="sharing-title">分享</h2>
-            <p>关于书籍、AI、效率和生活的一些记录</p>
+            <p>关于书籍、人工智能、效率和生活的一些记录</p>
           </div>
           <div className="share-grid">
             {shares.map((share) => (
@@ -106,7 +106,7 @@ export default function Home() {
             <a href="mailto:yxqhuqin222@gmail.com">yxqhuqin222@gmail.com</a>
             <a href="tel:18401205743">微信：18401205743</a>
             <a href="https://github.com/yxqhuqin222-star/" target="_blank" rel="noreferrer">
-              GitHub：yxqhuqin222-star
+              代码仓库：yxqhuqin222-star
             </a>
             <span>即刻：路过美术馆</span>
           </div>

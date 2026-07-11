@@ -54,7 +54,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         <header className="site-header" aria-label="站点头部">
           <div className="header-left">
             <a className="brand" href="/" aria-label="Gin 首页">
-              GIN
+              Gin
             </a>
             <nav aria-label="主导航">
               {navItems.map((item) => (
@@ -100,7 +100,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             <h2>相关链接</h2>
             <div className="detail-actions">
               <a href={project.githubUrl} target="_blank" rel="noreferrer">
-                GitHub ↗
+                代码仓库 ↗
               </a>
               {"liveUrl" in project && project.liveUrl ? (
                 <a href={project.liveUrl} target="_blank" rel="noreferrer">
@@ -135,7 +135,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       <section className="detail-bottom">
         <a href="/#projects">返回全部项目</a>
         <a href={project.githubUrl} target="_blank" rel="noreferrer">
-          查看 GitHub
+          查看代码仓库
         </a>
       </section>
     </main>

@@ -78,8 +78,7 @@ p {
   color: var(--fg);
   font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .site-header nav a::after {
@@ -239,7 +238,9 @@ p {
 .product-title:hover,
 .project-links a:hover,
 .footer-links a:hover {
-  color: #8ab4ff;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 
 .product-card p {
@@ -302,7 +303,6 @@ p {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .share-grid h3 {
@@ -350,7 +350,9 @@ p {
 .back-link:hover,
 .detail-actions a:hover,
 .detail-bottom a:hover {
-  color: #8ab4ff;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 
 .detail-hero {
