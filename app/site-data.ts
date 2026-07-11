@@ -23,7 +23,7 @@ export const projects = [
     tags: ["网站服务", "脚本工具", "已上线"],
     image: "/projects/rizhuizong.png",
     galleryImages: [
-      "/projects/dingtalk-broadcast-console.png",
+      "/projects/rizhuizong-prd-dashboard.png",
       "/projects/rizhuizong-2.png",
       "/projects/rizhuizong-3.png",
     ],
