@@ -42,11 +42,14 @@ export default function ProductPage({ params }: ProductPageProps) {
     );
   }
 
-  const galleryImages = [
-    project.image,
-    project.image.replace(".png", "-2.png"),
-    project.image.replace(".png", "-3.png"),
-  ];
+  const galleryImages =
+    "galleryImages" in project
+      ? project.galleryImages
+      : [
+          project.image,
+          project.image.replace(".png", "-2.png"),
+          project.image.replace(".png", "-3.png"),
+        ];
 
   return (
     <main>

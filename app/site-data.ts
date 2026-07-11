@@ -22,6 +22,11 @@ export const projects = [
     roleDescription: "负责需求整理、功能实现、部署和后续迭代。",
     tags: ["网站服务", "脚本工具", "已上线"],
     image: "/projects/rizhuizong.png",
+    galleryImages: [
+      "/projects/dingtalk-broadcast-console.png",
+      "/projects/rizhuizong-2.png",
+      "/projects/rizhuizong-3.png",
+    ],
     paragraphs: [
       "项目读取每日数据和每周目标数据，生成进度汇总、网页看板和学部播报图，并支持规则化的自然语言查询。",
       "这个项目把原本分散在表格、播报和统计里的操作整理成一条稳定流程，方便每天复用和复盘。",
