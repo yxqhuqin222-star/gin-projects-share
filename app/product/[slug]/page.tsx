@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { navItems, projects } from "../../site-data";
 
 type ProductPageProps = {
@@ -33,9 +34,9 @@ export default function ProductPage({ params }: ProductPageProps) {
     return (
       <main>
         <div className="page-shell">
-          <a className="back-link" href="/#projects">
+          <Link className="back-link" href="/#projects">
             返回项目
-          </a>
+          </Link>
           <h1 className="not-found-title">项目不存在</h1>
         </div>
       </main>
@@ -56,43 +57,40 @@ export default function ProductPage({ params }: ProductPageProps) {
       <div className="page-shell detail-shell">
         <header className="site-header" aria-label="站点头部">
           <div className="header-left">
-            <a className="brand" href="/" aria-label="Gin 首页">
+            <Link className="brand" href="/" aria-label="Gin Home">
               Gin
-            </a>
+            </Link>
             <nav aria-label="主导航">
               {navItems.map((item) => (
-                <a href={item.href} key={item.href}>
+                <Link href={item.href} key={item.href}>
                   {item.label}
-                </a>
+                </Link>
               ))}
             </nav>
           </div>
-          <div className="language" aria-label="语言">
-            <span>中文</span>
-          </div>
         </header>
 
-        <a className="back-link" href="/#projects">
-          ← 返回项目
-        </a>
+        <Link className="back-link" href="/#projects">
+          Back to Projects
+        </Link>
 
         <header className="detail-hero">
-          <p>项目</p>
+          <p>CASE STUDY</p>
           <h1>{project.title}</h1>
           <h2>{project.intro}</h2>
         </header>
 
         <section className="detail-meta" aria-label="项目概览">
           <div>
-            <h2>项目介绍</h2>
+            <h2>Overview</h2>
             <p>{project.summary}</p>
           </div>
           <div>
-            <h2>我的角色</h2>
+            <h2>Role</h2>
             <p>{project.roleDescription}</p>
           </div>
           <div>
-            <h2>所属类别</h2>
+            <h2>Stack / Type</h2>
             <div className="detail-tags">
               {project.tags.map((tag) => (
                 <span key={tag}>{tag}</span>
@@ -100,14 +98,14 @@ export default function ProductPage({ params }: ProductPageProps) {
             </div>
           </div>
           <div>
-            <h2>相关链接</h2>
+            <h2>Links</h2>
             <div className="detail-actions">
               <a href={project.githubUrl} target="_blank" rel="noreferrer">
-                代码仓库 ↗
+                GitHub
               </a>
               {"liveUrl" in project && project.liveUrl ? (
                 <a href={project.liveUrl} target="_blank" rel="noreferrer">
-                  访问网站 ↗
+                  Live site
                 </a>
               ) : null}
             </div>
@@ -136,9 +134,9 @@ export default function ProductPage({ params }: ProductPageProps) {
       </article>
 
       <section className="detail-bottom">
-        <a href="/#projects">返回全部项目</a>
+        <Link href="/#projects">Back to all projects</Link>
         <a href={project.githubUrl} target="_blank" rel="noreferrer">
-          查看代码仓库
+          Open GitHub
         </a>
       </section>
     </main>
