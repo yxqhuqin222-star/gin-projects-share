@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConsultationWidget } from "./consultation-widget";
 import { categories, navItems, projects, shares } from "./site-data";
 
 const projectAnchor = (slug: string) => `project-${slug}`;
@@ -132,6 +133,7 @@ export default function Home() {
           </div>
         </footer>
       </div>
+      <ConsultationWidget />
     </main>
   );
 }

@@ -10,10 +10,32 @@ const { d1, r2 } = hostingConfig;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
+const consultationEnvNames = [
+  "CONSULTATION_RELAY_MODE",
+  "CONSULTATION_LARK_BRIDGE_URL",
+  "FEISHU_LARK_CLI_CHAT_ID",
+  "FEISHU_BROADCAST_CHAT_ID",
+  "FEISHU_POLL_CHAT_ID",
+  "FEISHU_APP_ID",
+  "FEISHU_APP_SECRET",
+  "FEISHU_RECEIVE_ID",
+  "FEISHU_RECEIVE_ID_TYPE",
+  "FEISHU_EVENT_VERIFY_TOKEN",
+];
+
+function getConsultationVars() {
+  return Object.fromEntries(
+    consultationEnvNames.flatMap((name) => {
+      const value = process.env[name];
+      return value ? [[name, value]] : [];
+    }),
+  );
+}
 
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  vars: getConsultationVars(),
   d1_databases: d1
     ? [
         {

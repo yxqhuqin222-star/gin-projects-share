@@ -36,7 +36,45 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /src="\/projects\/rizhuizong-live-dashboard\.png"/);
   assert.match(html, /href="#project-feishu-chat-replay"/);
   assert.match(html, /id="project-feishu-chat-replay"/);
+  assert.match(html, /咨询/);
   assert.doesNotMatch(html, /人工智能|代码仓库/);
+});
+
+test("consultation api completes the local mock relay", async () => {
+  const response = await render("/api/consult");
+  assert.equal(response.status, 200);
+
+  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-consult`);
+  const { default: worker } = await import(workerUrl.href);
+
+  const apiResponse = await worker.fetch(
+    new Request("http://localhost/api/consult", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ message: "想咨询一个自动化项目" }),
+    }),
+    {
+      ASSETS: {
+        fetch: async () => new Response("Not found", { status: 404 }),
+      },
+    },
+    {
+      waitUntil() {},
+      passThroughOnException() {},
+    },
+  );
+
+  assert.equal(apiResponse.status, 200);
+
+  const payload = await apiResponse.json();
+  assert.equal(payload.relay.mode, "mock");
+  assert.match(payload.relay.replyText, /本地 mock 飞书回复/);
+  assert.ok(payload.sessionId);
+  assert.ok(payload.messages.length >= 3);
 });
 
 test("server-renders project detail pages with professional labels", async () => {

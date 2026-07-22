@@ -13,6 +13,7 @@ https://gin-projects-share.aurora-bear-8002.chatgpt.site
 - 项目详情：每个项目都有独立页面，包含项目说明、相关链接和项目图片。
 - 分享区域：预留书籍、人工智能、效率与生活等内容分类。
 - 联系方式：邮箱、微信、代码仓库和即刻。
+- 咨询入口：右下角悬浮对话窗口，本地 mock 飞书回复，也可沿用“小明”飞书机器人把咨询消息发到飞书私聊。
 
 ## 设计方向
 
@@ -47,7 +48,12 @@ npm run lint
 
 ## 内容位置
 
+- `docs/requirements.md`：项目需求文档和首版网站蓝图补充。
 - `app/page.tsx`：首页结构。
+- `app/consultation-widget.tsx`：咨询入口和站内对话界面。
+- `app/api/consult/route.ts`：咨询消息接口。
+- `app/feishu-adapter.ts`：mock/飞书消息转接适配层。
+- `docs/consultation-feishu.md`：真实飞书接入变量和回调说明。
 - `app/site-data.ts`：导航、项目和分享内容。
 - `app/product/[slug]/page.tsx`：项目详情页。
 - `app/globals.css`：全站样式。

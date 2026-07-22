@@ -1,0 +1,111 @@
+# 咨询入口与飞书转接
+
+## 当前第一版
+
+网站新增一个悬浮咨询入口。访客打开后可以发送消息，站内会显示等待状态，并通过 `/api/consult` 转接到后端适配层。
+
+默认没有飞书凭证时，系统使用本地 mock 适配器，完整验证：
+
+- 访客发送消息。
+- 站内出现等待提示。
+- mock 适配器模拟飞书侧回复。
+- 访客在同一个对话窗口看到回复。
+
+## 本地验证
+
+```bash
+npm run build
+npm test
+npm run dev
+```
+
+打开本地地址后，点击右下角“咨询”，发送一条消息。成功标志是：消息进入对话流，出现“正在转接 Gin 的飞书咨询通道，请稍等。”，随后出现 mock 回复。
+
+也可以直接验证接口：
+
+```bash
+curl -s -X POST http://localhost:3000/api/consult \
+  -H 'content-type: application/json' \
+  -d '{"message":"想咨询一个自动化项目"}'
+```
+
+## 沿用小明机器人私聊
+
+本地可以先沿用 `/Users/kityhello/workplace/geren/xiaoming` 里的“小明”飞书机器人。这个模式依赖本机已登录的 `lark-cli`，适合验证“网站咨询消息发到我的飞书私聊”。
+
+```bash
+CONSULTATION_RELAY_MODE=lark-cli
+CONSULTATION_LARK_BRIDGE_URL=http://127.0.0.1:8788/send
+FEISHU_LARK_CLI_CHAT_ID=飞书私聊会话 ID
+```
+
+如果不单独配置 `FEISHU_LARK_CLI_CHAT_ID`，适配层会依次尝试复用旧项目常见变量：
+
+```bash
+FEISHU_BROADCAST_CHAT_ID
+FEISHU_POLL_CHAT_ID
+```
+
+成功标志是：网站发出的咨询消息会通过 `lark-cli im +messages-send --as bot` 进入你和“小明”的飞书私聊。
+
+由于当前网站本地运行在 Cloudflare worker 模拟环境里，API 路由不能直接启动本机进程。需要先启动本地 bridge：
+
+```bash
+CONSULTATION_LARK_BRIDGE_PORT=8788 node scripts/lark-cli-bridge.mjs
+```
+
+bridge 只监听 `127.0.0.1`，用于本地验证，不用于线上部署。
+
+如果要本地验证“飞书回复回网站”，bridge 还可以轮询小明私聊中带 `#session:<sessionId>` 的新用户消息，并写回当前网站会话：
+
+```bash
+CONSULTATION_LARK_BRIDGE_PORT=8788 \
+CONSULTATION_LARK_BRIDGE_POLL=true \
+CONSULTATION_SITE_CALLBACK_URL=http://127.0.0.1:3001/api/consult/feishu-events \
+FEISHU_EVENT_VERIFY_TOKEN=本地回调校验值 \
+FEISHU_LARK_CLI_CHAT_ID=飞书私聊会话 ID \
+node scripts/lark-cli-bridge.mjs
+```
+
+bridge 启动时会先把当前私聊里的历史消息标记为已读，只处理启动后新出现的回复。你在飞书里回复时需要保留会话标记，例如：
+
+```text
+#session:chat_xxx 这是我的回复
+```
+
+## 飞书 Open API 接入变量
+
+线上长期运行更适合使用飞书 Open API。真实飞书发送只在 `CONSULTATION_RELAY_MODE=feishu` 且以下变量齐备时启用：
+
+```bash
+CONSULTATION_RELAY_MODE=feishu
+FEISHU_APP_ID=cli_xxx
+FEISHU_APP_SECRET=xxx
+FEISHU_RECEIVE_ID=oc_xxx
+FEISHU_RECEIVE_ID_TYPE=chat_id
+FEISHU_EVENT_VERIFY_TOKEN=xxx
+```
+
+这些值不能写进仓库。线上部署时应通过部署平台的环境变量配置。
+
+## 飞书侧配置
+
+第一版使用飞书服务端 API 向指定会话发送文本消息。消息里会带上会话标记：
+
+```text
+#session:<sessionId>
+```
+
+如果要让飞书侧回复回到网站，需要在飞书开放平台配置事件订阅，把消息事件回调到：
+
+```text
+/api/consult/feishu-events
+```
+
+回调内容需要保留 `#session:<sessionId>` 标记，接口会把标记后的文本写回对应网站会话。
+
+除飞书首次 URL challenge 外，回调接口必须配置并校验 `FEISHU_EVENT_VERIFY_TOKEN` 才会接受回复写入。
+
+## 边界和后续
+
+当前第一版用内存保存会话，适合本地验证和单进程测试。生产环境要长期可靠运行，需要补充持久化存储，并根据飞书事件安全要求完善签名校验、重试去重和多实例同步。

@@ -1,0 +1,140 @@
+export const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/#projects", label: "Projects" },
+  { href: "/#writing", label: "Notes" },
+  { href: "/#contact", label: "Contact" },
+];
+
+export const categories = ["AI", "Web App", "Automation", "Open Source", "Tooling", "All"];
+
+export const projects = [
+  {
+    slug: "rizhuizong",
+    title: "日追踪看板",
+    githubUrl: "https://github.com/yxqhuqin222-star/rizhuizong",
+    liveUrl: "https://rizhuizong.vercel.app",
+    category: "Web App",
+    role: "Owner / Builder",
+    status: "Live",
+    monogram: "日追踪",
+    summary: "面向日常运营进度的 Dashboard，整合目标、现状、完成率、筛选、导出和播报图。",
+    intro: "日追踪是一个面向运营进度管理的 Web Dashboard，包含本地数据服务、Summary 计算、看板视图、Workbook 导出和播报图生成。",
+    roleDescription: "负责需求拆解、数据口径整理、前端 Dashboard、自动化脚本、部署和迭代。",
+    tags: ["Web App", "Dashboard", "Automation"],
+    image: "/projects/rizhuizong-live-dashboard.png",
+    galleryImages: [
+      "/projects/rizhuizong-live-dashboard.png",
+      "/projects/rizhuizong-2.png",
+      "/projects/rizhuizong-3.png",
+    ],
+    paragraphs: [
+      "项目读取每日数据和每周 target，生成 Summary、Web Dashboard 和学部播报图，并支持规则化的自然语言查询。",
+      "这个项目把原本分散在 Excel、播报图和统计表里的操作整理成一条稳定 workflow，方便每天复用、检查和复盘。",
+    ],
+  },
+  {
+    slug: "xiaoyuzhou-to-article-qwen",
+    title: "小宇宙播客转文章",
+    githubUrl: "https://github.com/yxqhuqin222-star/xiaoyuzhou-to-article-qwen",
+    category: "AI",
+    role: "Developer",
+    status: "Prototype",
+    monogram: "播客",
+    summary: "把小宇宙 episode URL 转成 transcript，再整理为结构化播客笔记。",
+    intro: "输入小宇宙 episode URL 后，脚本会下载音频、调用转写服务、导出 transcript，并按固定结构整理成播客笔记。",
+    roleDescription: "负责 pipeline 设计、脚本实现、转写检查和内容结构验证。",
+    tags: ["AI", "Transcript", "Content Pipeline"],
+    image: "/projects/xiaoyuzhou-to-article-qwen.png",
+    galleryImages: [
+      "/projects/xiaoyuzhou-to-article-qwen-2.png",
+      "/projects/xiaoyuzhou-to-article-qwen-3.png",
+    ],
+    paragraphs: [
+      "完整 pipeline 是：输入小宇宙链接，下载原始音频，上传通义听悟转写，导出 transcript，检查开头、中段和结尾，最后生成结构化播客笔记。",
+      "项目说明明确标注：它不是阿里云、通义听悟或通义千问的官方项目；音频转写由通义听悟完成，内容整理由当前运行的模型执行。",
+    ],
+  },
+  {
+    slug: "dingtalk-broadcast-console",
+    title: "钉钉播报控制台",
+    githubUrl: "https://github.com/yxqhuqin222-star/dingtalk-broadcast-console",
+    category: "Automation",
+    role: "Developer",
+    status: "In progress",
+    monogram: "播报",
+    summary: "钉钉机器人播报 Console，覆盖预览、发送、定时任务和消息客户端。",
+    intro: "项目包含本地播报服务、preview/send API、定时脚本，以及钉钉机器人消息客户端。",
+    roleDescription: "负责播报规则、message schema、发送接口和 Console 交互实现。",
+    tags: ["Automation", "Console", "Bot Message"],
+    image: "/projects/dingtalk-broadcast-console.png",
+    galleryImages: [
+      "/projects/dingtalk-broadcast-console-2.png",
+      "/projects/dingtalk-broadcast-console-3.png",
+    ],
+    paragraphs: [
+      "项目提供 message preview 和 send 能力，可以先检查播报内容，再把消息发送到钉钉群。",
+      "定时脚本包含早间、中午、行业、倒计时、晚间等播报类型，并内置多个默认 trigger time。",
+    ],
+  },
+  {
+    slug: "pages_shouji",
+    title: "碎片收集页",
+    githubUrl: "https://github.com/yxqhuqin222-star/pages_shouji",
+    category: "Web App",
+    role: "Developer",
+    status: "Prototype",
+    monogram: "收集",
+    summary: "个人使用的轻量信息 Inbox，用来快速收集碎片内容，并按时间线搜索和管理。",
+    intro: "纯静态 Web App，支持内容保存、粘贴图片、timeline、搜索、tag filter、编辑删除和 backup import/export。",
+    roleDescription: "负责信息结构、交互流程和前端实现。",
+    tags: ["Web App", "Local Storage", "Information Inbox"],
+    image: "/projects/pages_shouji.png",
+    galleryImages: ["/projects/pages_shouji-2.png", "/projects/pages_shouji-3.png"],
+    paragraphs: [
+      "功能包括：直接输入保存、粘贴图片保存、card feed 展示、全文搜索、tag 识别、编辑删除、表格导出、backup import/export。",
+      "当前版本使用浏览器 Local Storage 保存数据，不依赖 server 和 database；适合个人快速记录和轻量整理。",
+    ],
+  },
+  {
+    slug: "feishu-chat-replay",
+    title: "飞书聊天记录回放",
+    githubUrl: "https://github.com/yxqhuqin222-star/feishu-chat-replay",
+    category: "Open Source",
+    role: "Developer",
+    status: "Prototype",
+    monogram: "回放",
+    summary: "本地聊天记录 Viewer，用于复现和检索飞书导出的聊天记录。",
+    intro: "打开页面即可查看聊天记录，支持 keyword search、高亮、日期筛选、sender filter 和图片预览。",
+    roleDescription: "负责数据结构、回放页面和前端展示实现。",
+    tags: ["Open Source", "Viewer", "Search"],
+    image: "/projects/feishu-chat-replay.png",
+    galleryImages: ["/projects/feishu-chat-replay-2.png", "/projects/feishu-chat-replay-3.png"],
+    paragraphs: [
+      "功能包括：keyword search 与高亮、上一条和下一条搜索结果跳转、日期范围筛选、sender filter、只看图片和表情、日期跳转、图片点击放大预览。",
+      "它适合在本地复现导出的聊天记录，让 search、filter 和图片查看更方便。",
+    ],
+  },
+];
+
+export const shares = [
+  {
+    title: "书籍",
+    group: "书籍",
+    summary: "读书笔记、摘录和读完之后真正留下来的想法。",
+  },
+  {
+    title: "AI",
+    group: "AI Notes",
+    summary: "关于 AI tooling、automation、agent workflow 和个人工作流的记录。",
+  },
+  {
+    title: "生活",
+    group: "生活",
+    summary: "生活里值得记录和分享的观察、经验和日常片段。",
+  },
+  {
+    title: "工具",
+    group: "工具",
+    summary: "好用的一些工具，记录实际使用场景和关键体验。",
+  },
+];
