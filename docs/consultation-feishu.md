@@ -102,10 +102,14 @@ FEISHU_EVENT_VERIFY_TOKEN=xxx
 /api/consult/feishu-events
 ```
 
-回调内容需要保留 `#session:<sessionId>` 标记，接口会把标记后的文本写回对应网站会话。
+回调内容需要保留 `#session:<sessionId>` 标记，接口会把标记后的文本写回对应网站会话。飞书 2.0 回调使用 `header.token` 校验，并通过 `header.event_id` 去重。
 
-除飞书首次 URL challenge 外，回调接口必须配置并校验 `FEISHU_EVENT_VERIFY_TOKEN` 才会接受回复写入。
+包括首次 URL challenge 在内，回调接口都会校验 `FEISHU_EVENT_VERIFY_TOKEN`；校验通过后才会接受回复写入。
 
-## 边界和后续
+## 数据保存
 
-当前第一版用内存保存会话，适合本地验证和单进程测试。生产环境要长期可靠运行，需要补充持久化存储，并根据飞书事件安全要求完善签名校验、重试去重和多实例同步。
+咨询会话和消息保存在 Cloudflare D1 的 `DB` 绑定中。数据库结构位于 `db/schema.ts`，部署迁移位于 `drizzle/`。因此网站发送和飞书回调即使落在不同 Worker 实例，也会读取同一份消息记录。
+
+## 边界
+
+当前入口允许任何访客咨询。飞书回复必须保留会话标记，纯文本之外的消息类型暂不写回网站。

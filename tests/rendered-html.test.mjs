@@ -1,7 +1,82 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+process.env.NODE_ENV = "test";
+
+function createConsultationDb() {
+  const messages = [];
+
+  return {
+    prepare(sql) {
+      let values = [];
+
+      return {
+        bind(...boundValues) {
+          values = boundValues;
+          return this;
+        },
+        async run() {
+          if (sql.includes("consultation_sessions")) {
+            return { meta: { changes: 1 } };
+          }
+
+          if (sql.includes("INSERT OR IGNORE INTO consultation_messages")) {
+            const [id, sessionId, role, text, status, externalEventId, createdAt] =
+              values;
+            const duplicate =
+              externalEventId &&
+              messages.some((message) => message.externalEventId === externalEventId);
+
+            if (!duplicate) {
+              messages.push({
+                id,
+                sessionId,
+                role,
+                text,
+                status,
+                externalEventId,
+                createdAt,
+              });
+            }
+
+            return { meta: { changes: duplicate ? 0 : 1 } };
+          }
+
+          throw new Error(`Unexpected SQL in test D1: ${sql}`);
+        },
+        async all() {
+          if (!sql.includes("FROM consultation_messages")) {
+            throw new Error(`Unexpected SQL in test D1: ${sql}`);
+          }
+
+          return {
+            results: messages
+              .filter((message) => message.sessionId === values[0])
+              .map((message) => ({
+                id: message.id,
+                role: message.role,
+                text: message.text,
+                status: message.status,
+                createdAt: message.createdAt,
+              })),
+          };
+        },
+      };
+    },
+  };
+}
+
+function workerEnvironment(overrides = {}) {
+  return {
+    ASSETS: {
+      fetch: async () => new Response("Not found", { status: 404 }),
+    },
+    ...overrides,
+  };
+}
+
 async function render(path = "/") {
+  globalThis.consultationTestD1 = createConsultationDb();
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${path}`);
   const { default: worker } = await import(workerUrl.href);
@@ -10,11 +85,7 @@ async function render(path = "/") {
     new Request(`http://localhost${path}`, {
       headers: { accept: "text/html" },
     }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
+    workerEnvironment(),
     {
       waitUntil() {},
       passThroughOnException() {},
@@ -57,11 +128,7 @@ test("consultation api rejects an unconfigured relay without fake success", asyn
       },
       body: JSON.stringify({ message: "想咨询一个自动化项目" }),
     }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
+    workerEnvironment(),
     {
       waitUntil() {},
       passThroughOnException() {},
@@ -73,6 +140,60 @@ test("consultation api rejects an unconfigured relay without fake success", asyn
   const payload = await apiResponse.json();
   assert.equal(payload.error, "咨询服务暂未配置，请稍后再试。");
   assert.doesNotMatch(JSON.stringify(payload), /正在转接|mock 飞书回复/);
+});
+
+test("Feishu schema 2.0 replies persist once and are returned to the website", async () => {
+  process.env.FEISHU_EVENT_VERIFY_TOKEN = "test-verify-token";
+  globalThis.consultationTestD1 = createConsultationDb();
+  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-feishu-callback`);
+  const { default: worker } = await import(workerUrl.href);
+  const environment = workerEnvironment();
+  const sessionId = "chat_callback_test";
+  const event = {
+    schema: "2.0",
+    header: {
+      event_id: "evt_callback_test",
+      event_type: "im.message.receive_v1",
+      token: "test-verify-token",
+    },
+    event: {
+      sender: { sender_type: "user" },
+      message: {
+        content: JSON.stringify({
+          text: `#session:${sessionId} 这是来自飞书的回复`,
+        }),
+      },
+    },
+  };
+
+  for (const duplicate of [false, true]) {
+    const response = await worker.fetch(
+      new Request("http://localhost/api/consult/feishu-events", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(event),
+      }),
+      environment,
+      { waitUntil() {}, passThroughOnException() {} },
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).duplicate, duplicate);
+  }
+
+  const response = await worker.fetch(
+    new Request(`http://localhost/api/consult?sessionId=${sessionId}`),
+    environment,
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.messages.length, 1);
+  assert.equal(payload.messages[0].role, "operator");
+  assert.equal(payload.messages[0].text, "这是来自飞书的回复");
+  delete process.env.FEISHU_EVENT_VERIFY_TOKEN;
 });
 
 test("server-renders project detail pages with professional labels", async () => {

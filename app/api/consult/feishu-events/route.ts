@@ -41,18 +41,23 @@ function extractText(content: unknown) {
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as {
+    schema?: string;
     challenge?: string;
     token?: string;
+    header?: {
+      event_id?: string;
+      event_type?: string;
+      token?: string;
+    };
     event?: {
+      sender?: {
+        sender_type?: string;
+      };
       message?: {
         content?: unknown;
       };
     };
   };
-
-  if (payload.challenge) {
-    return Response.json({ challenge: payload.challenge });
-  }
 
   const verifyToken = await runtimeEnv("FEISHU_EVENT_VERIFY_TOKEN");
 
@@ -63,8 +68,25 @@ export async function POST(request: Request) {
     );
   }
 
-  if (verifyToken && payload.token !== verifyToken) {
+  const requestToken = payload.header?.token ?? payload.token;
+
+  if (requestToken !== verifyToken) {
     return Response.json({ error: "invalid verify token" }, { status: 401 });
+  }
+
+  if (payload.challenge) {
+    return Response.json({ challenge: payload.challenge });
+  }
+
+  if (
+    payload.header?.event_type &&
+    payload.header.event_type !== "im.message.receive_v1"
+  ) {
+    return Response.json({ accepted: false, reason: "unsupported event type" });
+  }
+
+  if (payload.event?.sender?.sender_type === "app") {
+    return Response.json({ accepted: false, reason: "ignored app message" });
   }
 
   const text = extractText(payload.event?.message?.content);
@@ -91,10 +113,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const message = addOperatorReply(sessionId, reply);
+  const { message, inserted } = await addOperatorReply(
+    sessionId,
+    reply,
+    payload.header?.event_id,
+  );
 
   return Response.json({
     accepted: true,
+    duplicate: !inserted,
     sessionId,
     message,
   });

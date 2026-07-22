@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   return Response.json({
     sessionId,
-    messages: getMessages(sessionId),
+    messages: await getMessages(sessionId),
   });
 }
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     const sessionId = normalizeSessionId(payload.sessionId);
     const relay = await relayConsultationMessage({ sessionId, message });
-    const visitorMessage = addMessage(sessionId, {
+    const { message: visitorMessage } = await addMessage(sessionId, {
       role: "visitor",
       text: message,
       status: "sent",
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       sessionId,
       message: visitorMessage,
       relay,
-      messages: getMessages(sessionId),
+      messages: await getMessages(sessionId),
     });
   } catch (error) {
     if (error instanceof ConsultationRelayConfigError) {
