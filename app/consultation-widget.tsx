@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  KeyboardEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -128,6 +129,20 @@ export function ConsultationWidget() {
     }
   }
 
+  function handleInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (!input.trim() || isSending) {
+      return;
+    }
+
+    event.currentTarget.form?.requestSubmit();
+  }
+
   return (
     <aside className={`consultation ${isOpen ? "is-open" : ""}`} aria-label="咨询对话">
       <button
@@ -188,6 +203,7 @@ export function ConsultationWidget() {
             id="consultation-input"
             maxLength={800}
             onChange={(event) => setInput(event.target.value)}
+            onKeyDown={handleInputKeyDown}
             placeholder="比如：可以加微信细聊吗"
             rows={3}
             value={input}
