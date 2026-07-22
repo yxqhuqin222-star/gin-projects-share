@@ -22,7 +22,7 @@ type ConsultResponse = {
   sessionId: string;
   messages: ChatMessage[];
   relay?: {
-    mode: "mock" | "lark-cli" | "feishu";
+    mode: "lark-cli" | "feishu";
     status: string;
   };
   error?: string;
@@ -179,7 +179,6 @@ export function ConsultationWidget() {
           {messages.length === 0 ? (
             <div className="consultation-empty">
               <p>{helperText}</p>
-              <span>本地会先用 mock 飞书回复验证链路。</span>
             </div>
           ) : (
             messages.map((message) => (
@@ -188,7 +187,6 @@ export function ConsultationWidget() {
                 key={message.id}
               >
                 <p>{message.text}</p>
-                {message.status === "waiting" ? <span>等待回复</span> : null}
               </article>
             ))
           )}

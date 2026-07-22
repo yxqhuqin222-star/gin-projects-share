@@ -1,23 +1,16 @@
-import { addOperatorReply } from "./consultation-store";
-
 type RelayResult =
-  | {
-      mode: "mock";
-      status: "mocked";
-      replyText: string;
-    }
   | {
       mode: "lark-cli";
       status: "sent";
       messageId?: string;
-      replyText: string;
     }
   | {
       mode: "feishu";
       status: "sent";
       messageId?: string;
-      replyText: string;
     };
+
+export class ConsultationRelayConfigError extends Error {}
 
 type FeishuTokenResponse = {
   code?: number;
@@ -82,29 +75,22 @@ export async function relayConsultationMessage({
   const relayMode = await runtimeEnv("CONSULTATION_RELAY_MODE");
   const larkCliChatId = await getLarkCliChatId();
 
-  if (relayMode === "lark-cli" && larkCliChatId) {
+  if (relayMode === "lark-cli") {
+    if (!larkCliChatId) {
+      throw new ConsultationRelayConfigError("Consultation relay is not configured");
+    }
+
     const messageId = await sendLarkCliMessage(sessionId, message);
-    const replyText =
-      "消息已经转接到 Gin 的飞书私聊。当前本地版本已完成网站到飞书的真实发送验证。";
-    addOperatorReply(sessionId, replyText);
 
     return {
       mode: "lark-cli",
       status: "sent",
       messageId,
-      replyText,
     };
   }
 
   if (relayMode !== "feishu" || !(await hasFeishuConfig())) {
-    const replyText = buildMockReply(message);
-    addOperatorReply(sessionId, replyText);
-
-    return {
-      mode: "mock",
-      status: "mocked",
-      replyText,
-    };
+    throw new ConsultationRelayConfigError("Consultation relay is not configured");
   }
 
   const token = await getTenantAccessToken();
@@ -114,8 +100,6 @@ export async function relayConsultationMessage({
     mode: "feishu",
     status: "sent",
     messageId,
-    replyText:
-      "消息已经转接到 Gin 的飞书测试通道。收到飞书侧回复后，这里会同步更新。",
   };
 }
 
@@ -218,13 +202,6 @@ async function runLarkCli(args: string[]) {
       reject(new Error(stderr.trim() || stdout.trim() || "lark-cli send failed"));
     });
   });
-}
-
-function buildMockReply(message: string) {
-  const clean = message.replace(/\s+/g, " ").trim();
-  const topic = clean.length > 28 ? `${clean.slice(0, 28)}...` : clean;
-
-  return `已收到你的咨询：${topic}。这是本地 mock 飞书回复，用来验证完整对话链路。`;
 }
 
 async function getTenantAccessToken() {

@@ -40,7 +40,7 @@ test("server-renders the Gin homepage", async () => {
   assert.doesNotMatch(html, /人工智能|代码仓库/);
 });
 
-test("consultation api completes the local mock relay", async () => {
+test("consultation api rejects an unconfigured relay without fake success", async () => {
   const response = await render("/api/consult");
   assert.equal(response.status, 200);
 
@@ -68,13 +68,11 @@ test("consultation api completes the local mock relay", async () => {
     },
   );
 
-  assert.equal(apiResponse.status, 200);
+  assert.equal(apiResponse.status, 503);
 
   const payload = await apiResponse.json();
-  assert.equal(payload.relay.mode, "mock");
-  assert.match(payload.relay.replyText, /本地 mock 飞书回复/);
-  assert.ok(payload.sessionId);
-  assert.ok(payload.messages.length >= 3);
+  assert.equal(payload.error, "咨询服务暂未配置，请稍后再试。");
+  assert.doesNotMatch(JSON.stringify(payload), /正在转接|mock 飞书回复/);
 });
 
 test("server-renders project detail pages with professional labels", async () => {

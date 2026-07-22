@@ -3,7 +3,10 @@ import {
   getMessages,
   normalizeSessionId,
 } from "../../consultation-store";
-import { relayConsultationMessage } from "../../feishu-adapter";
+import {
+  ConsultationRelayConfigError,
+  relayConsultationMessage,
+} from "../../feishu-adapter";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -35,19 +38,12 @@ export async function POST(request: Request) {
     }
 
     const sessionId = normalizeSessionId(payload.sessionId);
+    const relay = await relayConsultationMessage({ sessionId, message });
     const visitorMessage = addMessage(sessionId, {
       role: "visitor",
       text: message,
       status: "sent",
     });
-
-    addMessage(sessionId, {
-      role: "assistant",
-      text: "正在转接 Gin 的飞书咨询通道，请稍等。",
-      status: "waiting",
-    });
-
-    const relay = await relayConsultationMessage({ sessionId, message });
 
     return Response.json({
       sessionId,
@@ -56,8 +52,18 @@ export async function POST(request: Request) {
       messages: getMessages(sessionId),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected error";
+    if (error instanceof ConsultationRelayConfigError) {
+      return Response.json(
+        { error: "咨询服务暂未配置，请稍后再试。" },
+        { status: 503 },
+      );
+    }
 
-    return Response.json({ error: message }, { status: 500 });
+    console.error("Failed to relay consultation message", error);
+
+    return Response.json(
+      { error: "消息发送失败，请稍后再试。" },
+      { status: 502 },
+    );
   }
 }
