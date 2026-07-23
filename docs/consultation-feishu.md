@@ -102,7 +102,7 @@ FEISHU_EVENT_VERIFY_TOKEN=xxx
 #session:<sessionId>
 ```
 
-网站最多每 4 秒同步一次最近 50 条消息，只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重。
+网站最多每 4 秒同步一次最近 50 条消息，只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重；如果同一条回复同时经过事件回调和轮询，两个入口也必须使用同一个 `message_id`。
 
 `/api/consult/feishu-events` 保留为经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的兼容回调入口，但当前生产链路不依赖它。
 

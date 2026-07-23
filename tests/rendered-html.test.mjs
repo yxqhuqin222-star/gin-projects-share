@@ -185,6 +185,7 @@ test("Feishu schema 2.0 replies persist once and are returned to the website", a
     event: {
       sender: { sender_type: "user" },
       message: {
+        message_id: "om_callback_test",
         content: JSON.stringify({
           text: `#session:${sessionId} 这是来自飞书的回复`,
         }),
@@ -219,6 +220,104 @@ test("Feishu schema 2.0 replies persist once and are returned to the website", a
   assert.equal(payload.messages[0].role, "operator");
   assert.equal(payload.messages[0].text, "这是来自飞书的回复");
   delete process.env.FEISHU_EVENT_VERIFY_TOKEN;
+});
+
+test("Feishu callback and polling share the message id dedupe key", async () => {
+  const environmentKeys = {
+    CONSULTATION_RELAY_MODE: "feishu",
+    FEISHU_APP_ID: "test-app",
+    FEISHU_APP_SECRET: "test-secret",
+    FEISHU_RECEIVE_ID: "test-chat",
+    FEISHU_RECEIVE_ID_TYPE: "chat_id",
+    FEISHU_EVENT_VERIFY_TOKEN: "test-verify-token",
+  };
+  Object.assign(process.env, environmentKeys);
+
+  const sessionId = "chat_shared_dedupe";
+  globalThis.consultationTestD1 = createConsultationDb();
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+
+    if (url.includes("tenant_access_token/internal")) {
+      return Response.json({ code: 0, tenant_access_token: "test-token" });
+    }
+
+    if (url.includes("/open-apis/im/v1/messages?")) {
+      return Response.json({
+        code: 0,
+        data: {
+          items: [
+            {
+              message_id: "om_shared_reply",
+              msg_type: "text",
+              sender: { sender_type: "user" },
+              body: {
+                content: JSON.stringify({
+                  text: `#session:${sessionId} 你好`,
+                }),
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    throw new Error(`Unexpected fetch in test: ${url}`);
+  };
+
+  try {
+    const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+    workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-shared-dedupe`);
+    const { default: worker } = await import(workerUrl.href);
+    const environment = workerEnvironment();
+    const callbackResponse = await worker.fetch(
+      new Request("http://localhost/api/consult/feishu-events", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          schema: "2.0",
+          header: {
+            event_id: "evt_shared_reply",
+            event_type: "im.message.receive_v1",
+            token: "test-verify-token",
+          },
+          event: {
+            sender: { sender_type: "user" },
+            message: {
+              message_id: "om_shared_reply",
+              content: JSON.stringify({
+                text: `#session:${sessionId} 你好`,
+              }),
+            },
+          },
+        }),
+      }),
+      environment,
+      { waitUntil() {}, passThroughOnException() {} },
+    );
+
+    assert.equal(callbackResponse.status, 200);
+    assert.equal((await callbackResponse.json()).duplicate, false);
+
+    const pollingResponse = await worker.fetch(
+      new Request(`http://localhost/api/consult?sessionId=${sessionId}`),
+      environment,
+      { waitUntil() {}, passThroughOnException() {} },
+    );
+    const payload = await pollingResponse.json();
+
+    assert.equal(pollingResponse.status, 200);
+    assert.equal(payload.messages.length, 1);
+    assert.equal(payload.messages[0].role, "operator");
+    assert.equal(payload.messages[0].text, "你好");
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of Object.keys(environmentKeys)) {
+      delete process.env[key];
+    }
+  }
 });
 
 test("consultation api polls Feishu replies and throttles repeated syncs", async () => {

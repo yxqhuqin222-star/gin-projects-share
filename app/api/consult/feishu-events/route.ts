@@ -54,6 +54,7 @@ export async function POST(request: Request) {
         sender_type?: string;
       };
       message?: {
+        message_id?: string;
         content?: unknown;
       };
     };
@@ -113,10 +114,12 @@ export async function POST(request: Request) {
     );
   }
 
+  const externalEventId =
+    payload.event?.message?.message_id ?? payload.header?.event_id;
   const { message, inserted } = await addOperatorReply(
     sessionId,
     reply,
-    payload.header?.event_id,
+    externalEventId,
   );
 
   return Response.json({

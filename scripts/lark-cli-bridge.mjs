@@ -106,7 +106,7 @@ async function listRecentMessages(chatId) {
   return envelope?.data?.messages || [];
 }
 
-async function postReplyToSite(text) {
+async function postReplyToSite(text, messageId) {
   const response = await fetch(siteCallbackUrl, {
     method: "POST",
     headers: {
@@ -114,8 +114,15 @@ async function postReplyToSite(text) {
     },
     body: JSON.stringify({
       token: eventToken,
+      header: {
+        event_id: messageId,
+        event_type: "im.message.receive_v1",
+        token: eventToken,
+      },
       event: {
+        sender: { sender_type: "user" },
         message: {
+          message_id: messageId,
           content: JSON.stringify({ text }),
         },
       },
@@ -160,7 +167,7 @@ async function pollReplies({ prime = false } = {}) {
       continue;
     }
 
-    const result = await postReplyToSite(text);
+    const result = await postReplyToSite(text, messageId);
     console.log(`forwarded Feishu reply ${messageId} to site session ${result.sessionId || ""}`);
   }
 }
