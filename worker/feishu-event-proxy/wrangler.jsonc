@@ -1,0 +1,6 @@
+{
+  "name": "gin-feishu-event-proxy",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-23",
+  "workers_dev": true
+}

@@ -106,6 +106,8 @@ FEISHU_EVENT_VERIFY_TOKEN=xxx
 
 `/api/consult/feishu-events` 是经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的生产回调入口。飞书开发者后台应把消息接收事件指向这个接口；如果事件没有打到网站，访客打开咨询窗口时仍会通过轮询兜底同步最近回复。
 
+如果飞书后台不能保存 `chatgpt.site` 请求地址，使用 `worker/feishu-event-proxy/` 部署的公开中转地址。中转会直接响应飞书 URL 校验，并把真实事件转发到网站回调接口。飞书开启加密策略时，需要把同一个 Encrypt Key 配置为 Worker secret `FEISHU_ENCRYPT_KEY`。
+
 ## 数据保存
 
 咨询会话和消息保存在 Cloudflare D1 的 `DB` 绑定中。数据库结构位于 `db/schema.ts`，部署迁移位于 `drizzle/`。因此网站发送和飞书回调即使落在不同 Worker 实例，也会读取同一份消息记录。
