@@ -88,6 +88,26 @@ export async function hasConsultationSession(sessionId: string) {
   return Boolean(result?.id);
 }
 
+export async function claimConsultationSync(
+  source: string,
+  intervalMs: number,
+) {
+  const database = await getD1();
+  const syncedAt = nowIso();
+  const threshold = new Date(Date.now() - intervalMs).toISOString();
+  const result = await database
+    .prepare(
+      `INSERT INTO consultation_sync_state (source, synced_at)
+       VALUES (?, ?)
+       ON CONFLICT(source) DO UPDATE SET synced_at = excluded.synced_at
+       WHERE consultation_sync_state.synced_at <= ?`,
+    )
+    .bind(source, syncedAt, threshold)
+    .run();
+
+  return result.meta.changes > 0;
+}
+
 export async function addOperatorReply(
   sessionId: string,
   text: string,

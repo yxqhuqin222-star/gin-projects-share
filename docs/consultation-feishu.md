@@ -96,15 +96,15 @@ FEISHU_EVENT_VERIFY_TOKEN=xxx
 #session:<sessionId>
 ```
 
-线上网站通过飞书事件订阅接收回复，不再在访客拉取消息时轮询飞书历史消息。回复时仍需保留：
+线上网站优先通过飞书事件订阅接收回复，同时保留飞书历史消息轮询作为兜底。回复时仍需保留：
 
 ```text
 #session:<sessionId>
 ```
 
-网站只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重；本地 bridge 转发回调时也必须携带同一个 `message_id`。
+网站只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重；事件回调、本地 bridge 和轮询兜底都必须使用同一个 `message_id`。
 
-`/api/consult/feishu-events` 是经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的生产回调入口。飞书开发者后台需要把消息接收事件指向这个接口，否则网站无法收到飞书回复。
+`/api/consult/feishu-events` 是经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的生产回调入口。飞书开发者后台应把消息接收事件指向这个接口；如果事件没有打到网站，访客打开咨询窗口时仍会通过轮询兜底同步最近回复。
 
 ## 数据保存
 

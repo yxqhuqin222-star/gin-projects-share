@@ -6,6 +6,7 @@ process.env.NODE_ENV = "test";
 function createConsultationDb() {
   const messages = [];
   const sessions = new Set();
+  const syncState = new Map();
 
   return {
     seedSession(sessionId) {
@@ -22,6 +23,18 @@ function createConsultationDb() {
         async run() {
           if (sql.includes("INSERT INTO consultation_sessions")) {
             sessions.add(values[0]);
+            return { meta: { changes: 1 } };
+          }
+
+          if (sql.includes("INSERT INTO consultation_sync_state")) {
+            const [source, syncedAt, threshold] = values;
+            const previous = syncState.get(source);
+
+            if (previous && previous > threshold) {
+              return { meta: { changes: 0 } };
+            }
+
+            syncState.set(source, syncedAt);
             return { meta: { changes: 1 } };
           }
 
@@ -209,7 +222,7 @@ test("Feishu schema 2.0 replies persist once and are returned to the website", a
   delete process.env.FEISHU_EVENT_VERIFY_TOKEN;
 });
 
-test("consultation api does not poll Feishu when reading website messages", async () => {
+test("consultation api polls Feishu replies as an event fallback", async () => {
   const environmentKeys = {
     CONSULTATION_RELAY_MODE: "feishu",
     FEISHU_APP_ID: "test-app",
@@ -219,29 +232,173 @@ test("consultation api does not poll Feishu when reading website messages", asyn
   };
   Object.assign(process.env, environmentKeys);
 
-  const sessionId = "chat_event_only_test";
+  const sessionId = "chat_polling_fallback_test";
   const database = createConsultationDb();
   database.seedSession(sessionId);
   globalThis.consultationTestD1 = database;
   const originalFetch = globalThis.fetch;
+  let listRequestCount = 0;
 
   globalThis.fetch = async (input) => {
-    throw new Error(`GET /api/consult should not call fetch: ${String(input)}`);
+    const url = String(input);
+
+    if (url.includes("tenant_access_token/internal")) {
+      return Response.json({ code: 0, tenant_access_token: "test-token" });
+    }
+
+    if (url.includes("/open-apis/im/v1/messages?")) {
+      listRequestCount += 1;
+      return Response.json({
+        code: 0,
+        data: {
+          items: [
+            {
+              message_id: "om_operator_reply",
+              msg_type: "text",
+              sender: { sender_type: "user" },
+              body: {
+                content: JSON.stringify({
+                  text: `#session:${sessionId} 这是飞书中的真人回复`,
+                }),
+              },
+            },
+            {
+              message_id: "om_bot_message",
+              msg_type: "text",
+              sender: { sender_type: "app" },
+              body: {
+                content: JSON.stringify({
+                  text: `#session:${sessionId} 机器人消息不应回传`,
+                }),
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    throw new Error(`Unexpected fetch in test: ${url}`);
   };
 
   try {
     const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-    workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-event-only`);
+    workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-feishu-fallback`);
     const { default: worker } = await import(workerUrl.href);
-    const response = await worker.fetch(
-      new Request(`http://localhost/api/consult?sessionId=${sessionId}`),
-      workerEnvironment(),
+    const request = () =>
+      worker.fetch(
+        new Request(`http://localhost/api/consult?sessionId=${sessionId}`),
+        workerEnvironment(),
+        { waitUntil() {}, passThroughOnException() {} },
+      );
+
+    const firstResponse = await request();
+    const firstPayload = await firstResponse.json();
+    assert.equal(firstResponse.status, 200);
+    assert.equal(firstPayload.messages.length, 1);
+    assert.equal(firstPayload.messages[0].role, "operator");
+    assert.equal(firstPayload.messages[0].text, "这是飞书中的真人回复");
+
+    const secondResponse = await request();
+    assert.equal(secondResponse.status, 200);
+    assert.equal(listRequestCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of Object.keys(environmentKeys)) {
+      delete process.env[key];
+    }
+  }
+});
+
+test("Feishu callback and polling fallback share the message id dedupe key", async () => {
+  const environmentKeys = {
+    CONSULTATION_RELAY_MODE: "feishu",
+    FEISHU_APP_ID: "test-app",
+    FEISHU_APP_SECRET: "test-secret",
+    FEISHU_RECEIVE_ID: "test-chat",
+    FEISHU_RECEIVE_ID_TYPE: "chat_id",
+    FEISHU_EVENT_VERIFY_TOKEN: "test-verify-token",
+  };
+  Object.assign(process.env, environmentKeys);
+
+  const sessionId = "chat_shared_dedupe";
+  globalThis.consultationTestD1 = createConsultationDb();
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+
+    if (url.includes("tenant_access_token/internal")) {
+      return Response.json({ code: 0, tenant_access_token: "test-token" });
+    }
+
+    if (url.includes("/open-apis/im/v1/messages?")) {
+      return Response.json({
+        code: 0,
+        data: {
+          items: [
+            {
+              message_id: "om_shared_reply",
+              msg_type: "text",
+              sender: { sender_type: "user" },
+              body: {
+                content: JSON.stringify({
+                  text: `#session:${sessionId} 你好`,
+                }),
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    throw new Error(`Unexpected fetch in test: ${url}`);
+  };
+
+  try {
+    const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+    workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-shared-dedupe`);
+    const { default: worker } = await import(workerUrl.href);
+    const environment = workerEnvironment();
+    const callbackResponse = await worker.fetch(
+      new Request("http://localhost/api/consult/feishu-events", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          schema: "2.0",
+          header: {
+            event_id: "evt_shared_reply",
+            event_type: "im.message.receive_v1",
+            token: "test-verify-token",
+          },
+          event: {
+            sender: { sender_type: "user" },
+            message: {
+              message_id: "om_shared_reply",
+              content: JSON.stringify({
+                text: `#session:${sessionId} 你好`,
+              }),
+            },
+          },
+        }),
+      }),
+      environment,
       { waitUntil() {}, passThroughOnException() {} },
     );
-    const payload = await response.json();
 
-    assert.equal(response.status, 200);
-    assert.deepEqual(payload.messages, []);
+    assert.equal(callbackResponse.status, 200);
+    assert.equal((await callbackResponse.json()).duplicate, false);
+
+    const pollingResponse = await worker.fetch(
+      new Request(`http://localhost/api/consult?sessionId=${sessionId}`),
+      environment,
+      { waitUntil() {}, passThroughOnException() {} },
+    );
+    const payload = await pollingResponse.json();
+
+    assert.equal(pollingResponse.status, 200);
+    assert.equal(payload.messages.length, 1);
+    assert.equal(payload.messages[0].role, "operator");
+    assert.equal(payload.messages[0].text, "你好");
   } finally {
     globalThis.fetch = originalFetch;
     for (const key of Object.keys(environmentKeys)) {
