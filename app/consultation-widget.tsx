@@ -29,6 +29,7 @@ type ConsultResponse = {
 };
 
 const storageKey = "gin-consultation-session";
+const refreshIntervalMs = 1000;
 
 export function ConsultationWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -74,11 +75,18 @@ export function ConsultationWidget() {
       return;
     }
 
+    const refreshTimeout = window.setTimeout(() => {
+      void refreshMessages(sessionId);
+    }, 0);
+
     const interval = window.setInterval(() => {
       void refreshMessages(sessionId);
-    }, 5000);
+    }, refreshIntervalMs);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(refreshTimeout);
+      window.clearInterval(interval);
+    };
   }, [isOpen, refreshMessages, sessionId]);
 
   useEffect(() => {

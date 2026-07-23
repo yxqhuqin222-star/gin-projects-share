@@ -7,17 +7,10 @@ import {
   ConsultationRelayConfigError,
   relayConsultationMessage,
 } from "../../feishu-adapter";
-import { syncFeishuConsultationReplies } from "../../feishu-consultation-sync";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const sessionId = normalizeSessionId(url.searchParams.get("sessionId") ?? "");
-
-  try {
-    await syncFeishuConsultationReplies();
-  } catch (error) {
-    console.error("Failed to sync Feishu consultation replies", error);
-  }
 
   return Response.json({
     sessionId,

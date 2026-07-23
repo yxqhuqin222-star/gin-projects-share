@@ -96,15 +96,15 @@ FEISHU_EVENT_VERIFY_TOKEN=xxx
 #session:<sessionId>
 ```
 
-线上网站通过飞书 Open API 轮询目标会话最近的文本消息，不需要修改“小明”现有的长连接订阅方式。回复时仍需保留：
+线上网站通过飞书事件订阅接收回复，不再在访客拉取消息时轮询飞书历史消息。回复时仍需保留：
 
 ```text
 #session:<sessionId>
 ```
 
-网站最多每 4 秒同步一次最近 50 条消息，只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重；如果同一条回复同时经过事件回调和轮询，两个入口也必须使用同一个 `message_id`。
+网站只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重；本地 bridge 转发回调时也必须携带同一个 `message_id`。
 
-`/api/consult/feishu-events` 保留为经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的兼容回调入口，但当前生产链路不依赖它。
+`/api/consult/feishu-events` 是经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的生产回调入口。飞书开发者后台需要把消息接收事件指向这个接口，否则网站无法收到飞书回复。
 
 ## 数据保存
 
