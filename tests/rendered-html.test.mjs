@@ -5,8 +5,13 @@ process.env.NODE_ENV = "test";
 
 function createConsultationDb() {
   const messages = [];
+  const sessions = new Set();
+  const syncState = new Map();
 
   return {
+    seedSession(sessionId) {
+      sessions.add(sessionId);
+    },
     prepare(sql) {
       let values = [];
 
@@ -16,7 +21,20 @@ function createConsultationDb() {
           return this;
         },
         async run() {
-          if (sql.includes("consultation_sessions")) {
+          if (sql.includes("INSERT INTO consultation_sessions")) {
+            sessions.add(values[0]);
+            return { meta: { changes: 1 } };
+          }
+
+          if (sql.includes("INSERT INTO consultation_sync_state")) {
+            const [source, syncedAt, threshold] = values;
+            const previous = syncState.get(source);
+
+            if (previous && previous > threshold) {
+              return { meta: { changes: 0 } };
+            }
+
+            syncState.set(source, syncedAt);
             return { meta: { changes: 1 } };
           }
 
@@ -43,6 +61,13 @@ function createConsultationDb() {
           }
 
           throw new Error(`Unexpected SQL in test D1: ${sql}`);
+        },
+        async first() {
+          if (!sql.includes("FROM consultation_sessions")) {
+            throw new Error(`Unexpected SQL in test D1: ${sql}`);
+          }
+
+          return sessions.has(values[0]) ? { id: values[0] } : null;
         },
         async all() {
           if (!sql.includes("FROM consultation_messages")) {
@@ -194,6 +219,93 @@ test("Feishu schema 2.0 replies persist once and are returned to the website", a
   assert.equal(payload.messages[0].role, "operator");
   assert.equal(payload.messages[0].text, "这是来自飞书的回复");
   delete process.env.FEISHU_EVENT_VERIFY_TOKEN;
+});
+
+test("consultation api polls Feishu replies and throttles repeated syncs", async () => {
+  const environmentKeys = {
+    CONSULTATION_RELAY_MODE: "feishu",
+    FEISHU_APP_ID: "test-app",
+    FEISHU_APP_SECRET: "test-secret",
+    FEISHU_RECEIVE_ID: "test-chat",
+    FEISHU_RECEIVE_ID_TYPE: "chat_id",
+  };
+  Object.assign(process.env, environmentKeys);
+
+  const sessionId = "chat_polling_test";
+  const database = createConsultationDb();
+  database.seedSession(sessionId);
+  globalThis.consultationTestD1 = database;
+  const originalFetch = globalThis.fetch;
+  let listRequestCount = 0;
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+
+    if (url.includes("tenant_access_token/internal")) {
+      return Response.json({ code: 0, tenant_access_token: "test-token" });
+    }
+
+    if (url.includes("/open-apis/im/v1/messages?")) {
+      listRequestCount += 1;
+      return Response.json({
+        code: 0,
+        data: {
+          items: [
+            {
+              message_id: "om_operator_reply",
+              msg_type: "text",
+              sender: { sender_type: "user" },
+              body: {
+                content: JSON.stringify({
+                  text: `#session:${sessionId} 这是飞书中的真人回复`,
+                }),
+              },
+            },
+            {
+              message_id: "om_bot_message",
+              msg_type: "text",
+              sender: { sender_type: "app" },
+              body: {
+                content: JSON.stringify({
+                  text: `#session:${sessionId} 机器人消息不应回传`,
+                }),
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    throw new Error(`Unexpected fetch in test: ${url}`);
+  };
+
+  try {
+    const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+    workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-feishu-poll`);
+    const { default: worker } = await import(workerUrl.href);
+    const request = () =>
+      worker.fetch(
+        new Request(`http://localhost/api/consult?sessionId=${sessionId}`),
+        workerEnvironment(),
+        { waitUntil() {}, passThroughOnException() {} },
+      );
+
+    const firstResponse = await request();
+    const firstPayload = await firstResponse.json();
+    assert.equal(firstResponse.status, 200);
+    assert.equal(firstPayload.messages.length, 1);
+    assert.equal(firstPayload.messages[0].role, "operator");
+    assert.equal(firstPayload.messages[0].text, "这是飞书中的真人回复");
+
+    const secondResponse = await request();
+    assert.equal(secondResponse.status, 200);
+    assert.equal(listRequestCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of Object.keys(environmentKeys)) {
+      delete process.env[key];
+    }
+  }
 });
 
 test("server-renders project detail pages with professional labels", async () => {

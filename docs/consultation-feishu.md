@@ -96,15 +96,15 @@ FEISHU_EVENT_VERIFY_TOKEN=xxx
 #session:<sessionId>
 ```
 
-如果要让飞书侧回复回到网站，需要在飞书开放平台配置事件订阅，把消息事件回调到：
+线上网站通过飞书 Open API 轮询目标会话最近的文本消息，不需要修改“小明”现有的长连接订阅方式。回复时仍需保留：
 
 ```text
-/api/consult/feishu-events
+#session:<sessionId>
 ```
 
-回调内容需要保留 `#session:<sessionId>` 标记，接口会把标记后的文本写回对应网站会话。飞书 2.0 回调使用 `header.token` 校验，并通过 `header.event_id` 去重。
+网站最多每 4 秒同步一次最近 50 条消息，只写入用户发送、带有效会话标记且不超过 800 字的文本。飞书 `message_id` 用于 D1 去重。
 
-包括首次 URL challenge 在内，回调接口都会校验 `FEISHU_EVENT_VERIFY_TOKEN`；校验通过后才会接受回复写入。
+`/api/consult/feishu-events` 保留为经过 `FEISHU_EVENT_VERIFY_TOKEN` 校验的兼容回调入口，但当前生产链路不依赖它。
 
 ## 数据保存
 

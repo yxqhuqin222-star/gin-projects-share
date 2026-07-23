@@ -26,6 +26,25 @@ type FeishuMessageResponse = {
   };
 };
 
+type FeishuMessageListResponse = {
+  code?: number;
+  msg?: string;
+  data?: {
+    items?: Array<{
+      message_id?: string;
+      msg_type?: string;
+      body?: { content?: string };
+      sender?: { sender_type?: string };
+    }>;
+  };
+};
+
+export type FeishuConsultationReply = {
+  eventId: string;
+  sessionId: string;
+  text: string;
+};
+
 function env(name: string) {
   return process.env[name]?.trim() ?? "";
 }
@@ -226,6 +245,77 @@ async function getTenantAccessToken() {
   }
 
   return payload.tenant_access_token;
+}
+
+export async function listFeishuConsultationReplies(): Promise<
+  FeishuConsultationReply[]
+> {
+  if (!(await isFeishuConsultationSyncConfigured())) {
+    return [];
+  }
+
+  const token = await getTenantAccessToken();
+  const query = new URLSearchParams({
+    container_id_type: "chat",
+    container_id: await runtimeEnv("FEISHU_RECEIVE_ID"),
+    sort_type: "ByCreateTimeDesc",
+    page_size: "50",
+  });
+  const response = await fetch(
+    `https://open.feishu.cn/open-apis/im/v1/messages?${query}`,
+    {
+      headers: { authorization: `Bearer ${token}` },
+    },
+  );
+  const payload = (await response.json()) as FeishuMessageListResponse;
+
+  if (!response.ok || payload.code !== 0) {
+    throw new Error(payload.msg || "Failed to list Feishu messages");
+  }
+
+  return (payload.data?.items ?? []).flatMap((item) => {
+    if (
+      !item.message_id ||
+      item.msg_type !== "text" ||
+      item.sender?.sender_type !== "user"
+    ) {
+      return [];
+    }
+
+    const text = extractFeishuText(item.body?.content);
+    const sessionMatch = text.match(/#session:([a-zA-Z0-9_-]{8,80})/);
+    const reply = sessionMatch ? text.replace(sessionMatch[0], "").trim() : "";
+
+    if (!sessionMatch || !reply || reply.length > 800) {
+      return [];
+    }
+
+    return [
+      {
+        eventId: item.message_id,
+        sessionId: sessionMatch[1],
+        text: reply,
+      },
+    ];
+  });
+}
+
+export async function isFeishuConsultationSyncConfigured() {
+  return (
+    (await runtimeEnv("CONSULTATION_RELAY_MODE")) === "feishu" &&
+    (await hasFeishuConfig())
+  );
+}
+
+function extractFeishuText(content?: string) {
+  if (!content) return "";
+
+  try {
+    const payload = JSON.parse(content) as { text?: string };
+    return payload.text ?? "";
+  } catch {
+    return "";
+  }
 }
 
 async function sendFeishuMessage(

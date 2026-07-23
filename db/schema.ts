@@ -28,3 +28,8 @@ export const consultationMessages = sqliteTable(
     ),
   ],
 );
+
+export const consultationSyncState = sqliteTable("consultation_sync_state", {
+  source: text("source").primaryKey(),
+  syncedAt: text("synced_at").notNull(),
+});
