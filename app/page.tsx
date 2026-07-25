@@ -64,7 +64,7 @@ export default function Home() {
           </ul>
 
           <div className="product-grid">
-            {projects.map((project, index) => (
+            {projects.map((project) => (
               <article
                 className="product-card"
                 id={projectAnchor(project.slug)}
@@ -81,12 +81,6 @@ export default function Home() {
                     src={project.image}
                   />
                   <span className="visual-shade" aria-hidden="true" />
-                  <span className="visual-index">{String(index + 1).padStart(2, "0")}</span>
-                  <span className="visual-source">真实项目截图</span>
-                  <span className="visual-copy">
-                    <span>{project.category}</span>
-                    <strong>{project.title}</strong>
-                  </span>
                 </Link>
                 <div className="product-body">
                   <Link className="product-title" href={`/product/${project.slug}`}>
@@ -95,11 +89,7 @@ export default function Home() {
                   <p>{project.summary}</p>
                 </div>
                 <div className="product-meta">
-                  <div className="tags">
-                    <span>{project.category}</span>
-                    <span>{project.role}</span>
-                    <strong>{project.status}</strong>
-                  </div>
+                  <strong className="project-status">{project.status}</strong>
                   <div className="project-links">
                     <Link href={`/product/${project.slug}`}>Case study</Link>
                     <a href={project.githubUrl} target="_blank" rel="noreferrer">

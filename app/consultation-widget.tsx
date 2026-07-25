@@ -171,7 +171,7 @@ export function ConsultationWidget() {
               <span aria-hidden="true" />
               真人回复
             </p>
-            <h2>有什么问题，直接问我。</h2>
+            <h2>由知识渊博的人员提供答复</h2>
           </div>
           <button
             className="consultation-close"
