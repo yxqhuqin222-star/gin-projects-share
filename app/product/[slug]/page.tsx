@@ -43,14 +43,7 @@ export default function ProductPage({ params }: ProductPageProps) {
     );
   }
 
-  const galleryImages =
-    "galleryImages" in project
-      ? project.galleryImages
-      : [
-          project.image,
-          project.image.replace(".png", "-2.png"),
-          project.image.replace(".png", "-3.png"),
-        ];
+  const galleryImages = project.galleryImages ?? (project.image ? [project.image] : []);
 
   return (
     <main>
@@ -110,20 +103,33 @@ export default function ProductPage({ params }: ProductPageProps) {
               ) : null}
             </div>
           </div>
+          <div>
+            <h2>Source</h2>
+            <p>{project.sourceNote}</p>
+          </div>
         </section>
       </div>
 
-      <section className="detail-gallery" aria-label="项目图片">
-        {galleryImages.map((image, index) => (
-          <figure key={image}>
-            <img
-              alt={`${project.title} 项目展示图 ${index + 1}`}
-              loading={index === 0 ? "eager" : "lazy"}
-              src={image}
-            />
-          </figure>
-        ))}
-      </section>
+      {galleryImages.length > 0 ? (
+        <section className="detail-gallery" aria-label="项目图片">
+          {galleryImages.map((image, index) => (
+            <figure key={image}>
+              <img
+                alt={`${project.title} 项目展示图 ${index + 1}`}
+                loading={index === 0 ? "eager" : "lazy"}
+                src={image}
+              />
+            </figure>
+          ))}
+        </section>
+      ) : (
+        <section className="detail-gallery text-gallery" aria-label="项目图片说明">
+          <div className="detail-placeholder">
+            <span>{project.monogram}</span>
+            <p>该公开仓库暂无可核验的公开截图，因此这里不放生成图或假截图。</p>
+          </div>
+        </section>
+      )}
 
       <article className="detail-article">
         <div>

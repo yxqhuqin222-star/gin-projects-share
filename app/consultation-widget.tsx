@@ -38,6 +38,7 @@ export function ConsultationWidget() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
 
   const helperText = useMemo(() => {
@@ -151,11 +152,19 @@ export function ConsultationWidget() {
     event.currentTarget.form?.requestSubmit();
   }
 
+  function closePanel() {
+    setIsOpen(false);
+    window.requestAnimationFrame(() => {
+      triggerRef.current?.focus();
+    });
+  }
+
   return (
     <aside className={`consultation ${isOpen ? "is-open" : ""}`} aria-label="咨询对话">
       <button
         className="consultation-trigger"
         type="button"
+        ref={triggerRef}
         aria-expanded={isOpen}
         aria-controls="consultation-panel"
         onClick={() => setIsOpen((current) => !current)}
@@ -164,64 +173,66 @@ export function ConsultationWidget() {
         问Gin
       </button>
 
-      <section className="consultation-panel" id="consultation-panel">
-        <header className="consultation-header">
-          <div>
-            <p>
-              <span aria-hidden="true" />
-              真人回复
-            </p>
-            <h2>由知识渊博的人员提供答复</h2>
-          </div>
-          <button
-            className="consultation-close"
-            type="button"
-            aria-label="关闭咨询窗口"
-            onClick={() => setIsOpen(false)}
-          >
-            ×
-          </button>
-        </header>
-
-        <div className="consultation-messages" ref={messageListRef} aria-live="polite">
-          {messages.length === 0 ? (
-            <div className="consultation-empty">
-              <p>{helperText}</p>
+      {isOpen ? (
+        <section className="consultation-panel" id="consultation-panel">
+          <header className="consultation-header">
+            <div>
+              <p>
+                <span aria-hidden="true" />
+                真人回复
+              </p>
+              <h2>把问题发给 Gin</h2>
             </div>
-          ) : (
-            messages.map((message) => (
-              <article
-                className={`consultation-message ${message.role}`}
-                key={message.id}
-              >
-                <p>{message.text}</p>
-              </article>
-            ))
-          )}
-        </div>
-
-        <form className="consultation-form" onSubmit={handleSubmit}>
-          <label htmlFor="consultation-input">
-            <span>你的问题</span>
-            <span>{input.length}/800</span>
-          </label>
-          <textarea
-            id="consultation-input"
-            maxLength={800}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleInputKeyDown}
-            placeholder="比如：可以加微信细聊吗"
-            rows={3}
-            value={input}
-          />
-          <div className="consultation-actions">
-            {error ? <p role="alert">{error}</p> : <span aria-hidden="true" />}
-            <button type="submit" disabled={isSending || !input.trim()}>
-              {isSending ? "发送中" : "发送"}
+            <button
+              className="consultation-close"
+              type="button"
+              aria-label="关闭咨询窗口"
+              onClick={closePanel}
+            >
+              ×
             </button>
+          </header>
+
+          <div className="consultation-messages" ref={messageListRef} aria-live="polite">
+            {messages.length === 0 ? (
+              <div className="consultation-empty">
+                <p>{helperText}</p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <article
+                  className={`consultation-message ${message.role}`}
+                  key={message.id}
+                >
+                  <p>{message.text}</p>
+                </article>
+              ))
+            )}
           </div>
-        </form>
-      </section>
+
+          <form className="consultation-form" onSubmit={handleSubmit}>
+            <label htmlFor="consultation-input">
+              <span>你的问题</span>
+              <span>{input.length}/800</span>
+            </label>
+            <textarea
+              id="consultation-input"
+              maxLength={800}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={handleInputKeyDown}
+              placeholder="比如：可以加微信细聊吗"
+              rows={3}
+              value={input}
+            />
+            <div className="consultation-actions">
+              {error ? <p role="alert">{error}</p> : <span aria-hidden="true" />}
+              <button type="submit" disabled={isSending || !input.trim()}>
+                {isSending ? "发送中" : "发送"}
+              </button>
+            </div>
+          </form>
+        </section>
+      ) : null}
     </aside>
   );
 }
