@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { navItems, projects } from "../../site-data";
+import {
+  getProjectBySlug,
+  getProjectCategoryLabel,
+  navItems,
+  projects,
+} from "../../site-data";
 
 type ProductPageProps = {
   params: {
@@ -13,7 +18,7 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: ProductPageProps): Metadata {
-  const project = projects.find((item) => item.slug === params.slug);
+  const project = getProjectBySlug(params.slug);
 
   if (!project) {
     return {
@@ -28,14 +33,14 @@ export function generateMetadata({ params }: ProductPageProps): Metadata {
 }
 
 export default function ProductPage({ params }: ProductPageProps) {
-  const project = projects.find((item) => item.slug === params.slug);
+  const project = getProjectBySlug(params.slug);
 
   if (!project) {
     return (
       <main>
-        <div className="page-shell">
-          <Link className="back-link" href="/#projects">
-            返回项目
+        <div className="workbench-page">
+          <Link className="back-link" href="/#work">
+            返回首页
           </Link>
           <h1 className="not-found-title">项目不存在</h1>
         </div>
@@ -44,74 +49,58 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   const galleryImages = project.galleryImages ?? (project.image ? [project.image] : []);
+  const categoryLabel = getProjectCategoryLabel(project.categoryId);
 
   return (
     <main>
-      <div className="page-shell detail-shell">
-        <header className="site-header" aria-label="站点头部">
-          <div className="header-left">
-            <Link className="brand" href="/" aria-label="Gin Home">
-              Gin
-            </Link>
-            <nav aria-label="主导航">
-              {navItems.map((item) => (
-                <Link href={item.href} key={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+      <div className="workbench-page detail-page">
+        <header className="minimal-header" aria-label="站点头部">
+          <Link className="brand" href="/" aria-label="Gin Home">
+            Gin
+          </Link>
+          <nav aria-label="主导航">
+            {navItems.map((item) => (
+              <a href={item.href} key={item.href}>
+                {item.label}
+              </a>
+            ))}
+          </nav>
         </header>
 
-        <Link className="back-link" href="/#projects">
-          Back to Projects
+        <Link className="back-link" href={`/#${project.categoryId}`}>
+          返回{categoryLabel}
         </Link>
 
         <header className="detail-hero">
-          <p>CASE STUDY</p>
+          <p>{project.status}</p>
           <h1>{project.title}</h1>
           <h2>{project.intro}</h2>
+          <div className="detail-actions">
+            <a href={project.githubUrl} target="_blank" rel="noreferrer">
+              仓库主页
+            </a>
+            {project.liveUrl ? (
+              <a href={project.liveUrl} target="_blank" rel="noreferrer">
+                打开页面
+              </a>
+            ) : null}
+          </div>
         </header>
 
-        <section className="detail-meta" aria-label="项目概览">
+        <section className="detail-summary" aria-label="项目概览">
           <div>
-            <h2>Overview</h2>
+            <span>一句话</span>
             <p>{project.summary}</p>
           </div>
           <div>
-            <h2>Role</h2>
-            <p>{project.roleDescription}</p>
-          </div>
-          <div>
-            <h2>Stack / Type</h2>
-            <div className="detail-tags">
-              {project.tags.map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h2>Links</h2>
-            <div className="detail-actions">
-              <a href={project.githubUrl} target="_blank" rel="noreferrer">
-                GitHub
-              </a>
-              {"liveUrl" in project && project.liveUrl ? (
-                <a href={project.liveUrl} target="_blank" rel="noreferrer">
-                  Live site
-                </a>
-              ) : null}
-            </div>
-          </div>
-          <div>
-            <h2>Source</h2>
+            <span>来源</span>
             <p>{project.sourceNote}</p>
           </div>
         </section>
       </div>
 
       {galleryImages.length > 0 ? (
-        <section className="detail-gallery" aria-label="项目图片">
+        <section className="project-gallery" aria-label="项目图片">
           {galleryImages.map((image, index) => (
             <figure key={image}>
               <img
@@ -122,16 +111,9 @@ export default function ProductPage({ params }: ProductPageProps) {
             </figure>
           ))}
         </section>
-      ) : (
-        <section className="detail-gallery text-gallery" aria-label="项目图片说明">
-          <div className="detail-placeholder">
-            <span>{project.monogram}</span>
-            <p>该公开仓库暂无可核验的公开截图，因此这里不放生成图或假截图。</p>
-          </div>
-        </section>
-      )}
+      ) : null}
 
-      <article className="detail-article">
+      <article className="detail-article" aria-label="项目说明">
         <div>
           {project.paragraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
@@ -140,9 +122,9 @@ export default function ProductPage({ params }: ProductPageProps) {
       </article>
 
       <section className="detail-bottom">
-        <Link href="/#projects">Back to all projects</Link>
+        <Link href={`/#${project.categoryId}`}>返回列表</Link>
         <a href={project.githubUrl} target="_blank" rel="noreferrer">
-          Open GitHub
+          仓库主页
         </a>
       </section>
     </main>

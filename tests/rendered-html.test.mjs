@@ -125,20 +125,28 @@ test("server-renders the Gin homepage", async () => {
 
   const html = await response.text();
   assert.match(html, /Gin - 项目与分享/);
-  assert.match(html, /Web App/);
-  assert.match(html, /AI 工作流/);
-  assert.match(html, /GitHub/);
+  assert.match(html, /按用途打开作品/);
+  assert.match(html, /工作/);
+  assert.match(html, /skills及工具/);
+  assert.match(html, /个人提效/);
+  assert.match(html, /分享/);
+  assert.match(html, /联系/);
   assert.match(html, /href="\/product\/rizhuizong"/);
-  assert.match(html, /src="\/projects\/rizhuizong-live-dashboard\.png"/);
-  assert.match(html, /12(?:<!-- -->)? 个公开仓库/);
   assert.match(html, /id="project-renxiao"/);
   assert.match(html, /id="project-gin-words"/);
   assert.match(html, /href="\/product\/paltform"/);
-  assert.match(html, /href="\/product\/dsandqwen"/);
+  assert.match(html, /href="\/product\/dialkit-tuner"/);
+  assert.match(html, /href="\/product\/xhs-photo-downloader"/);
+  assert.match(html, /href="\/product\/xiaoming-feishu-bot"/);
   assert.match(html, /href="\/product\/opencodex-codex-desktop-model-catalog-json"/);
   assert.match(html, /href="\/product\/skill-description-translator"/);
   assert.match(html, /href="\/product\/xiaomao-custom-rules"/);
+  assert.match(html, /href="\/admin"/);
+  assert.match(html, /邮箱/);
   assert.doesNotMatch(html, /project-feishu-chat-replay/);
+  assert.doesNotMatch(html, /product\/dsandqwen/);
+  assert.doesNotMatch(html, /xhs-photo-downloader\/settings/);
+  assert.doesNotMatch(html, /Stack \/ Type|Live site|Selected work|More projects/);
   assert.match(html, /咨询/);
   assert.doesNotMatch(html, /人工智能|代码仓库/);
 });
@@ -421,9 +429,19 @@ test("server-renders project detail pages with professional labels", async () =>
 
   const html = await response.text();
   assert.match(html, /日追踪看板/);
-  assert.match(html, /CASE STUDY/);
-  assert.match(html, /Overview/);
-  assert.match(html, /Back to Projects/);
-  assert.match(html, /GitHub/);
+  assert.match(html, /一句话/);
+  assert.match(html, /仓库主页/);
+  assert.match(html, /打开页面/);
+  assert.doesNotMatch(html, /CASE STUDY|Overview|Stack \/ Type|Links|Back to Projects/);
   assert.doesNotMatch(html, /代码仓库|所属类别|相关链接/);
+});
+
+test("server-renders the reserved admin entry without a missing page", async () => {
+  const response = await render("/admin");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+
+  const html = await response.text();
+  assert.match(html, /内容管理入口预留/);
+  assert.match(html, /返回公开页面/);
 });
