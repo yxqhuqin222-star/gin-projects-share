@@ -9,6 +9,12 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  classifyRequestFailure,
+  classifyStatus,
+  ErrorKind,
+} from "./error-config";
+import { ErrorState } from "./error-state";
 
 type ChatMessage = {
   id: string;
@@ -30,6 +36,18 @@ type ConsultResponse = {
 
 const storageKey = "gin-consultation-session";
 const refreshIntervalMs = 1000;
+const requestTimeoutMs = 8000;
+
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), requestTimeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
 
 export function ConsultationWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,6 +56,7 @@ export function ConsultationWidget() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [errorKind, setErrorKind] = useState<ErrorKind>("api");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
 
@@ -50,13 +69,26 @@ export function ConsultationWidget() {
   }, [messages.length]);
 
   const refreshMessages = useCallback(async (nextSessionId: string) => {
-    const response = await fetch(
-      `/api/consult?sessionId=${encodeURIComponent(nextSessionId)}`,
-    );
-    const payload = (await response.json()) as ConsultResponse;
+    try {
+      const response = await fetchWithTimeout(
+        `/api/consult?sessionId=${encodeURIComponent(nextSessionId)}`,
+      );
+      const payload = (await response.json()) as ConsultResponse;
 
-    if (payload.messages) {
-      setMessages(payload.messages);
+      if (!response.ok) {
+        setErrorKind(classifyStatus(response.status));
+        setError(payload.error || "对话暂时没有加载成功。");
+        return;
+      }
+
+      setError("");
+
+      if (payload.messages) {
+        setMessages(payload.messages);
+      }
+    } catch (refreshError) {
+      setErrorKind(classifyRequestFailure(refreshError));
+      setError("对话暂时没有加载成功。");
     }
   }, []);
 
@@ -109,9 +141,10 @@ export function ConsultationWidget() {
     setIsSending(true);
     setError("");
     setInput("");
+    let nextErrorKind: ErrorKind = "api";
 
     try {
-      const response = await fetch("/api/consult", {
+      const response = await fetchWithTimeout("/api/consult", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -124,6 +157,7 @@ export function ConsultationWidget() {
       const payload = (await response.json()) as ConsultResponse;
 
       if (!response.ok) {
+        nextErrorKind = classifyStatus(response.status);
         throw new Error(payload.error || "发送失败");
       }
 
@@ -131,6 +165,13 @@ export function ConsultationWidget() {
       window.localStorage.setItem(storageKey, payload.sessionId);
       setMessages(payload.messages);
     } catch (sendError) {
+      setErrorKind(
+        typeof navigator !== "undefined" && !navigator.onLine
+          ? "network"
+          : sendError instanceof DOMException
+            ? classifyRequestFailure(sendError)
+            : nextErrorKind,
+      );
       setError(sendError instanceof Error ? sendError.message : "发送失败");
       setInput(message);
     } finally {
@@ -225,7 +266,15 @@ export function ConsultationWidget() {
               value={input}
             />
             <div className="consultation-actions">
-              {error ? <p role="alert">{error}</p> : <span aria-hidden="true" />}
+              {error ? (
+                <ErrorState
+                  kind={errorKind}
+                  title={error}
+                  description="咨询入口仍可继续使用，检查网络后可以再次发送。"
+                />
+              ) : (
+                <span aria-hidden="true" />
+              )}
               <button type="submit" disabled={isSending || !input.trim()}>
                 {isSending ? "发送中" : "发送"}
               </button>

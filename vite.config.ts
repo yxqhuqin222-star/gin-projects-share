@@ -34,7 +34,7 @@ function getConsultationVars() {
 
 const localBindingConfig = {
   main: "./worker/index.ts",
-  compatibility_flags: ["nodejs_compat"],
+  compatibility_date: "2026-07-15",
   vars: getConsultationVars(),
   d1_databases: d1
     ? [

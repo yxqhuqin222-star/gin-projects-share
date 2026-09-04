@@ -125,12 +125,21 @@ test("server-renders the Gin homepage", async () => {
 
   const html = await response.text();
   assert.match(html, /Gin - 项目与分享/);
-  assert.match(html, /按用途打开作品/);
+  assert.match(html, /My Work\./);
+  assert.match(html, /projects/);
+  assert.match(html, /首页先展示项目主图、类型标签和标题/);
+  assert.match(html, /暂无可核验公开截图/);
+  assert.match(html, /工作 - 工具/);
+  assert.match(html, /skills及工具 - Skill/);
+  assert.match(html, /个人提效 - 静态应用/);
   assert.match(html, /工作/);
   assert.match(html, /skills及工具/);
   assert.match(html, /个人提效/);
   assert.match(html, /分享/);
   assert.match(html, /联系/);
+  assert.match(html, /DialKit Tuner/);
+  assert.match(html, /xhs-photo-downloader/);
+  assert.match(html, /xiaoming-feishu-bot/);
   assert.match(html, /href="\/product\/rizhuizong"/);
   assert.match(html, /id="project-renxiao"/);
   assert.match(html, /id="project-gin-words"/);
@@ -141,8 +150,9 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /href="\/product\/opencodex-codex-desktop-model-catalog-json"/);
   assert.match(html, /href="\/product\/skill-description-translator"/);
   assert.match(html, /href="\/product\/xiaomao-custom-rules"/);
-  assert.match(html, /href="\/admin"/);
   assert.match(html, /邮箱/);
+  assert.doesNotMatch(html, /GitHub README 和仓库元数据/);
+  assert.doesNotMatch(html, /GitHub 仓库描述、文件结构和现有站内材料/);
   assert.doesNotMatch(html, /project-feishu-chat-replay/);
   assert.doesNotMatch(html, /product\/dsandqwen/);
   assert.doesNotMatch(html, /xhs-photo-downloader\/settings/);
@@ -423,17 +433,65 @@ test("Feishu callback and polling fallback share the message id dedupe key", asy
 });
 
 test("server-renders project detail pages with professional labels", async () => {
-  const response = await render("/product/rizhuizong");
+  const response = await render("/product/renxiao");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /日追踪看板/);
+  assert.match(html, /Renxiao Dashboard/);
   assert.match(html, /一句话/);
   assert.match(html, /仓库主页/);
   assert.match(html, /打开页面/);
+  assert.doesNotMatch(html, /来源/);
+  assert.doesNotMatch(html, /GitHub README 和本地项目截图/);
   assert.doesNotMatch(html, /CASE STUDY|Overview|Stack \/ Type|Links|Back to Projects/);
   assert.doesNotMatch(html, /代码仓库|所属类别|相关链接/);
+});
+
+test("unknown routes render the branded 404 page", async () => {
+  const response = await render("/randompagethatdoesntexist");
+  assert.equal(response.status, 404);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+
+  const html = await response.text();
+  assert.match(html, /页面没有找到/);
+  assert.match(html, /这个页面可能已经被移动、删除，或者地址输入有误。/);
+  assert.match(html, /返回首页/);
+  assert.match(html, /error-code/);
+  assert.doesNotMatch(html, /nginx|Vercel 404|stack trace|Error:/i);
+});
+
+test("unknown project slugs use the same branded 404 page", async () => {
+  const response = await render("/product/not-a-real-project");
+  assert.equal(response.status, 404);
+
+  const html = await response.text();
+  assert.match(html, /页面没有找到/);
+  assert.doesNotMatch(html, /项目不存在/);
+});
+
+test("error preview routes render shared error page variants when explicitly enabled", async () => {
+  process.env.NEXT_PUBLIC_ENABLE_ERROR_TESTS = "1";
+
+  try {
+    for (const [path, title] of [
+      ["/error-preview/403", "没有访问权限"],
+      ["/error-preview/500", "页面出现了一些问题"],
+      ["/error-preview/502", "连接服务失败"],
+      ["/error-preview/503", "服务暂时不可用"],
+      ["/error-preview/network", "网络连接不可用"],
+    ]) {
+      const response = await render(path);
+      assert.equal(response.status, 200);
+
+      const html = await response.text();
+      assert.match(html, new RegExp(title));
+      assert.match(html, /重新尝试|返回首页/);
+      assert.match(html, /error-code/);
+    }
+  } finally {
+    delete process.env.NEXT_PUBLIC_ENABLE_ERROR_TESTS;
+  }
 });
 
 test("server-renders the reserved admin entry without a missing page", async () => {

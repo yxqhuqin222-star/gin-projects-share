@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   getProjectBySlug,
   getProjectCategoryLabel,
@@ -36,16 +37,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const project = getProjectBySlug(params.slug);
 
   if (!project) {
-    return (
-      <main>
-        <div className="workbench-page">
-          <Link className="back-link" href="/#work">
-            返回首页
-          </Link>
-          <h1 className="not-found-title">项目不存在</h1>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
   const galleryImages = project.galleryImages ?? (project.image ? [project.image] : []);
@@ -72,7 +64,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         </Link>
 
         <header className="detail-hero">
-          <p>{project.status}</p>
+          {project.status ? <p>{project.status}</p> : null}
           <h1>{project.title}</h1>
           <h2>{project.intro}</h2>
           <div className="detail-actions">
@@ -91,10 +83,6 @@ export default function ProductPage({ params }: ProductPageProps) {
           <div>
             <span>一句话</span>
             <p>{project.summary}</p>
-          </div>
-          <div>
-            <span>来源</span>
-            <p>{project.sourceNote}</p>
           </div>
         </section>
       </div>

@@ -49,11 +49,20 @@ export type Project = {
   monogram: string;
   summary: string;
   intro: string;
-  sourceNote: string;
+  sourceNote?: string;
   image?: string;
   galleryImages?: string[];
   paragraphs: string[];
 };
+
+export const featuredProjectSlugs = [
+  "paltform",
+  "dingtalk-broadcast-console",
+  "rizhuizong",
+  "renxiao",
+  "xiaoyuzhou-to-article-qwen",
+  "gin-words",
+] as const;
 
 export const projects: Project[] = [
   {
@@ -62,22 +71,23 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/yxqhuqin222-star/paltform",
     liveUrl: "https://yxqhuqin222-star.github.io/paltform/#/",
     categoryId: "work",
-    status: "在线",
     monogram: "工具",
     sourceNote: "GitHub README 和仓库元数据",
     summary: "个人工具广场，集中展示和管理常用小工具，支持搜索、分类和导入导出。",
     intro: "一个集中管理常用小工具的个人工具广场，公开版本通过 GitHub Pages 提供静态页面。",
+    image: "/projects/paltform.png",
+    galleryImages: ["/projects/paltform.png"],
     paragraphs: [
       "README 记录当前能力：首页展示工具卡片，支持按工具名称或描述搜索，支持按分类筛选工具。",
       "工具管理页支持添加、编辑、删除工具，创建或删除分类，并支持导入、导出工具配置 JSON。",
     ],
+    status: "",
   },
   {
     slug: "dingtalk-broadcast-console",
     title: "钉钉播报控制台",
     githubUrl: "https://github.com/yxqhuqin222-star/dingtalk-broadcast-console",
     categoryId: "work",
-    status: "仓库",
     monogram: "播报",
     sourceNote: "GitHub 仓库描述、文件结构和现有站内材料；仓库当前没有 README",
     summary: "钉钉播报相关控制台和脚本材料，用来整理播报链路。",
@@ -92,19 +102,17 @@ export const projects: Project[] = [
       "GitHub 公开仓库描述为“钉钉播报”，主语言为 Python。",
       "公开文件结构包含 bobao、jump、netlify 和 renxiao 目录；更细功能以补充 README 后为准。",
     ],
+    status: "",
   },
   {
     slug: "rizhuizong",
     title: "日追踪看板",
     githubUrl: "https://github.com/yxqhuqin222-star/rizhuizong",
-    liveUrl: "https://yxqhuqin222-star.github.io/rizhuizong/",
     categoryId: "work",
-    status: "在线",
     monogram: "日追踪",
     sourceNote: "GitHub README、仓库描述和现有项目截图",
     summary: "读取每日数据和每周目标，生成网页看板、工作簿、播报图和线上只读同步。",
-    intro:
-      "读取每日数据和每周目标，生成统一 Summary、网页看板、工作簿、播报图，并支持线上只读同步。",
+    intro: "读取每日数据和每周目标，生成统一 Summary、网页看板、工作簿、播报图，并支持线上只读同步。",
     image: "/projects/rizhuizong-live-dashboard.png",
     galleryImages: [
       "/projects/rizhuizong-live-dashboard.png",
@@ -115,6 +123,7 @@ export const projects: Project[] = [
       "README 明确记录：项目读取每日 demo 和每周 target，生成 Summary、网页看板、工作簿、总进度/学部/专项播报图，并支持线上只读同步。",
       "项目能力包括最新期次/全部期次切换、多选筛选、CSV 导出、渠道聚合、年级聚合，以及本地更新后的线上只读 state 同步。",
     ],
+    status: "",
   },
   {
     slug: "renxiao",
@@ -190,14 +199,15 @@ export const projects: Project[] = [
     title: "DialKit Tuner",
     githubUrl: "https://github.com/yxqhuqin222-star/dialkit-tuner",
     categoryId: "skills-tools",
-    status: "待补详情",
+    status: "Skill",
     monogram: "Dial",
-    sourceNote: "公开 GitHub 仓库主页",
-    summary: "公开仓库入口，详细说明和截图后续补充。",
-    intro: "DialKit Tuner 的公开仓库入口；当前页面先保留最小说明，避免扩写未经确认的功能细节。",
+    sourceNote: "GitHub README 和仓库元数据",
+    summary: "把指定前端页面或组件接入 DialKit 调参面板，用于现场调整 UI 和 motion 参数。",
+    intro:
+      "一个面向 Codex 的 skill：先定位真实前端项目和目标组件，再用最小范围接入 DialKit 调参面板。",
     paragraphs: [
-      "当前先展示仓库主页和最小说明。",
-      "详情页先只保留仓库入口和最小说明；README、截图或使用场景补充后，再扩展为完整项目介绍。",
+      "README 说明它用于开发期界面调参，不作为生产功能接入；可暴露圆角、间距、模糊、阴影、颜色、缩放、透明度、时长、弹性和阻尼等控制项。",
+      "流程要求先检查目标项目的框架、路由和组件入口，再按项目已有包管理器安装依赖，并把调好的参数固化回 CSS、Tailwind、CSS 变量或 Motion 配置。",
     ],
   },
   {
@@ -205,14 +215,15 @@ export const projects: Project[] = [
     title: "xhs-photo-downloader",
     githubUrl: "https://github.com/yxqhuqin222-star/xhs-photo-downloader",
     categoryId: "skills-tools",
-    status: "待补详情",
+    status: "本地工具",
     monogram: "XHS",
-    sourceNote: "公开 GitHub 仓库主页",
-    summary: "公开仓库入口，详细说明和截图后续补充。",
-    intro: "xhs-photo-downloader 的公开仓库主页入口；当前页面先保留最小说明。",
+    sourceNote: "GitHub README 和仓库元数据",
+    summary: "macOS 本地工具，用 Playwright 辅助导出个人小红书笔记链接，再交给外部下载器保存作品文件。",
+    intro:
+      "一个小红书 Live Photo 自动备份整理工具，边界是本地运行、手动登录、不绕过平台权限，并把媒体解析交给外部 XHS-Downloader。",
     paragraphs: [
-      "当前先展示仓库主页和最小说明。",
-      "详情页先只保留仓库入口和最小说明；README、截图或使用场景补充后，再扩展为完整项目介绍。",
+      "README 明确写出核心边界：不直接请求图片接口、不抓取 img src、不保存用户密码、不绕过登录、验证码、权限或平台限制。",
+      "推荐流程是先导出账号主页笔记链接，再用 XHS-Downloader 小批量验证，最后整理 raw-downloads 中的 HEIC、MOV、JPG、MP4、PNG 或 ZIP 文件。",
     ],
   },
   {
@@ -220,13 +231,16 @@ export const projects: Project[] = [
     title: "Gin Words",
     githubUrl: "https://github.com/yxqhuqin222-star/gin-words",
     categoryId: "personal-efficiency",
-    status: "仓库",
+    status: "静态应用",
     monogram: "Words",
     sourceNote: "GitHub README 和 README 预览图",
     summary: "欧洲旅游英语单词卡，纯前端单词速查网站，配套云端进度持久化。",
     intro: "给自己用的欧洲旅游英语单词卡，包含单词卡和常用句学习模式。",
     image: "/projects/gin-words-web-preview.png",
-    galleryImages: ["/projects/gin-words-web-preview.png", "/projects/gin-words-app-preview.png"],
+    galleryImages: [
+      "/projects/gin-words-web-preview.png",
+      "/projects/gin-words-app-preview.png",
+    ],
     paragraphs: [
       "README 说明前端可直接打开 index.html，零依赖、无需联网；朗读功能依赖浏览器 Web Speech API。",
       "项目包含单词卡和常用句两种学习模式，进度各自独立；词库与句库可通过 validate.mjs 校验。",
@@ -243,7 +257,10 @@ export const projects: Project[] = [
     summary: "轻量网页 Inbox，用来保存碎片信息、粘贴图片、搜索、标签筛选和备份导入导出。",
     intro: "一个给个人使用的轻量网页，用来快速收集碎片化信息，并按时间线查看、搜索和管理。",
     image: "/projects/pages_shouji.png",
-    galleryImages: ["/projects/pages_shouji-2.png", "/projects/pages_shouji-3.png"],
+    galleryImages: [
+      "/projects/pages_shouji-2.png",
+      "/projects/pages_shouji-3.png",
+    ],
     paragraphs: [
       "README 记录功能包括：直接输入保存、剪贴板图片粘贴、大图自动压缩、卡片流展示、搜索、标签识别与筛选。",
       "项目支持一键导出 Excel、JSON 备份导入导出；数据保存在当前浏览器本地，不依赖服务器和数据库。",
@@ -269,14 +286,15 @@ export const projects: Project[] = [
     title: "xiaoming-feishu-bot",
     githubUrl: "https://github.com/yxqhuqin222-star/xiaoming-feishu-bot",
     categoryId: "personal-efficiency",
-    status: "待补详情",
+    status: "飞书机器人",
     monogram: "飞书",
-    sourceNote: "公开 GitHub 仓库主页",
-    summary: "公开仓库入口，详细说明和截图后续补充。",
-    intro: "xiaoming-feishu-bot 的公开仓库入口；当前页面先保留最小说明。",
+    sourceNote: "GitHub README 和仓库元数据",
+    summary: "本地运行的飞书机器人，用事件监听加轮询兜底承接私聊、群聊和日常播报能力。",
+    intro:
+      "小明是一个本地运行的飞书机器人，用于在飞书私聊和群聊里回复消息，并承接早安、知识卡、大道消息、摸鱼日历、晚间收尾等播报能力。",
     paragraphs: [
-      "当前先展示仓库主页和最小说明。",
-      "详情页先只保留仓库入口和最小说明；README、截图或使用场景补充后，再扩展为完整项目介绍。",
+      "README 记录它支持私聊直接回复，群聊默认只在被 @小明 时回复，并通过飞书开放平台机器人身份回复原消息。",
+      "项目使用事件监听加轮询兜底，已处理消息 ID 会持久化到 state/xiaoming-seen.json；也提供 macOS LaunchAgent 常驻运行模板。",
     ],
   },
 ];
