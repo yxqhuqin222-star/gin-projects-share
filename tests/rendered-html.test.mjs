@@ -7,6 +7,8 @@ function createConsultationDb() {
   const messages = [];
   const sessions = new Set();
   const syncState = new Map();
+  let siteContent = null;
+  const loginAttempts = new Map();
 
   return {
     seedSession(sessionId) {
@@ -21,6 +23,32 @@ function createConsultationDb() {
           return this;
         },
         async run() {
+          if (sql.includes("INSERT INTO site_content")) {
+            if (siteContent) return { meta: { changes: 0 } };
+            siteContent = { payload: values[1], version: 1 };
+            return { meta: { changes: 1 } };
+          }
+
+          if (sql.includes("UPDATE site_content")) {
+            if (!siteContent || siteContent.version !== values[3]) return { meta: { changes: 0 } };
+            siteContent = { payload: values[0], version: siteContent.version + 1 };
+            return { meta: { changes: 1 } };
+          }
+
+          if (sql.includes("INSERT INTO admin_login_attempts")) {
+            loginAttempts.set(values[0], {
+              failedCount: values[1],
+              windowStartedAt: values[2],
+              blockedUntil: values[3],
+            });
+            return { meta: { changes: 1 } };
+          }
+
+          if (sql.includes("DELETE FROM admin_login_attempts")) {
+            loginAttempts.delete(values[0]);
+            return { meta: { changes: 1 } };
+          }
+
           if (sql.includes("INSERT INTO consultation_sessions")) {
             sessions.add(values[0]);
             return { meta: { changes: 1 } };
@@ -63,6 +91,14 @@ function createConsultationDb() {
           throw new Error(`Unexpected SQL in test D1: ${sql}`);
         },
         async first() {
+          if (sql.includes("FROM site_content")) {
+            return siteContent;
+          }
+
+          if (sql.includes("FROM admin_login_attempts")) {
+            return loginAttempts.get(values[0]) ?? null;
+          }
+
           if (!sql.includes("FROM consultation_sessions")) {
             throw new Error(`Unexpected SQL in test D1: ${sql}`);
           }
@@ -151,6 +187,8 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /href="\/product\/skill-description-translator"/);
   assert.match(html, /href="\/product\/xiaomao-custom-rules"/);
   assert.match(html, /邮箱/);
+  assert.match(html, /href="\/admin"/);
+  assert.match(html, /管理内容/);
   assert.doesNotMatch(html, /GitHub README 和仓库元数据/);
   assert.doesNotMatch(html, /GitHub 仓库描述、文件结构和现有站内材料/);
   assert.doesNotMatch(html, /project-feishu-chat-replay/);
@@ -494,12 +532,118 @@ test("error preview routes render shared error page variants when explicitly ena
   }
 });
 
-test("server-renders the reserved admin entry without a missing page", async () => {
+test("admin content management protects, validates, saves, and publishes D1 content", async () => {
+  process.env.ADMIN_PASSWORD = "test-admin-password";
+  process.env.ADMIN_SESSION_SECRET = "test-admin-session-secret-that-is-long-enough";
+  const database = createConsultationDb();
+  globalThis.consultationTestD1 = database;
+  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-admin`);
+  const { default: worker } = await import(workerUrl.href);
+  const environment = workerEnvironment();
+  const context = { waitUntil() {}, passThroughOnException() {} };
+
+  try {
+    const request = (path, options = {}) => worker.fetch(
+      new Request(`http://localhost${path}`, options),
+      environment,
+      context,
+    );
+
+    assert.equal((await request("/api/admin/content")).status, 401);
+
+    const rejectedLogin = await request("/api/admin/auth", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: "wrong-password" }),
+    });
+    assert.equal(rejectedLogin.status, 401);
+
+    const login = await request("/api/admin/auth", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
+    });
+    assert.equal(login.status, 200);
+    const cookie = login.headers.get("set-cookie").split(";")[0];
+    assert.match(login.headers.get("set-cookie"), /HttpOnly; Secure; SameSite=Strict/);
+    assert.match(login.headers.get("set-cookie"), /Max-Age=43200/);
+
+    const initialResponse = await request("/api/admin/content", { headers: { cookie } });
+    assert.equal(initialResponse.status, 200);
+    const initial = await initialResponse.json();
+    assert.equal(initial.version, 0);
+    const content = structuredClone(initial.content);
+    content.projects[0].title = "D1 管理页测试项目";
+    content.projects[1].isPublished = false;
+
+    const unsafeContent = structuredClone(content);
+    unsafeContent.projects[0].githubUrl = "javascript:alert(1)";
+    const invalidSave = await request("/api/admin/content", {
+      method: "PUT",
+      headers: { "content-type": "application/json", cookie },
+      body: JSON.stringify({ content: unsafeContent, expectedVersion: initial.version }),
+    });
+    assert.equal(invalidSave.status, 400);
+
+    const save = await request("/api/admin/content", {
+      method: "PUT",
+      headers: { "content-type": "application/json", cookie },
+      body: JSON.stringify({ content, expectedVersion: initial.version }),
+    });
+    assert.equal(save.status, 200, JSON.stringify(await save.clone().json()));
+    const saved = await save.clone().json();
+    assert.equal(saved.version, 1);
+
+    const staleSave = await request("/api/admin/content", {
+      method: "PUT",
+      headers: { "content-type": "application/json", cookie },
+      body: JSON.stringify({ content, expectedVersion: initial.version }),
+    });
+    assert.equal(staleSave.status, 409);
+    assert.match(staleSave.headers.get("cache-control"), /no-store/);
+
+    const homepage = await request("/");
+    const homepageHtml = await homepage.text();
+    assert.match(homepageHtml, /D1 管理页测试项目/);
+    assert.doesNotMatch(homepageHtml, /钉钉播报控制台/);
+
+    const detail = await request("/product/paltform");
+    assert.equal(detail.status, 200);
+    assert.match(await detail.text(), /D1 管理页测试项目/);
+    assert.equal((await request("/product/dingtalk-broadcast-console")).status, 404);
+
+    const logout = await request("/api/admin/auth", { method: "DELETE", headers: { cookie } });
+    assert.equal(logout.status, 200);
+    assert.match(logout.headers.get("set-cookie"), /Max-Age=0/);
+
+    for (const attempt of [1, 2, 3, 4, 5]) {
+      const response = await request("/api/admin/auth", {
+        method: "POST",
+        headers: { "content-type": "application/json", "cf-connecting-ip": "203.0.113.8" },
+        body: JSON.stringify({ password: "wrong-password" }),
+      });
+      assert.equal(response.status, attempt === 5 ? 429 : 401);
+    }
+    const blocked = await request("/api/admin/auth", {
+      method: "POST",
+      headers: { "content-type": "application/json", "cf-connecting-ip": "203.0.113.8" },
+      body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
+    });
+    assert.equal(blocked.status, 429);
+    assert.match(blocked.headers.get("cache-control"), /no-store/);
+  } finally {
+    delete process.env.ADMIN_PASSWORD;
+    delete process.env.ADMIN_SESSION_SECRET;
+  }
+});
+
+test("server-renders the admin login without a missing page", async () => {
   const response = await render("/admin");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /内容管理入口预留/);
-  assert.match(html, /返回公开页面/);
+  assert.match(html, /管理站点内容/);
+  assert.match(html, /管理密码/);
 });

@@ -1,6 +1,6 @@
 # 网站文案编辑指南
 
-当前网站没有接入可视化 CMS 或后台编辑器。最直接、最稳定的编辑方式是改源码里的文案数据，然后重新构建并刷新本地预览。
+网站提供受保护的 `/admin` 内容管理页，可维护项目、分享和联系方式；保存后会写入 Cloudflare D1，并立即影响公开首页和项目详情页。源码里的数据仍是首次使用和 D1 不可用时的安全兜底。
 
 真实源码目录：
 
@@ -10,7 +10,24 @@ cd /Users/kityhello/workplace/project/gin-projects-share
 
 不要改 `/Users/kityhello/workplace/geren/wangzhan` 里的旧探索稿；当前网站源码在上面的 `gin-projects-share` 目录。
 
-## 改哪里
+## 用管理页编辑（推荐）
+
+访问 `/admin` 并使用管理员密码登录。首版支持：
+
+- 项目新增、编辑、隐藏/恢复、排序；图片填写已有 `/projects/...` 路径或安全外链，不上传文件。
+- 分享与联系方式的新增、编辑、删除、排序。
+- 保存前服务端校验 slug、分类、链接与重复条目；校验失败不会写入数据库。
+
+部署前需在每个目标环境设置以下私密变量，绝不能写入仓库：
+
+```text
+ADMIN_PASSWORD=<管理员密码>
+ADMIN_SESSION_SECRET=<至少 32 个字符的随机字符串>
+```
+
+新的 D1 迁移 `drizzle/0002_site_content.sql` 和 `drizzle/0003_admin_login_attempts.sql` 必须先应用；删除 `site_content` 表中 id 为 `primary` 的记录即可恢复为源码默认内容。管理登录以来源 IP 为维度限制为 15 分钟内 5 次失败尝试，因此 `ADMIN_PASSWORD` 应使用高强度且唯一的密码。
+
+## 改源码默认内容
 
 ### 1. 大部分项目文案：`app/site-data.ts`
 
@@ -215,14 +232,3 @@ app/product/[slug]/page.tsx
 ```bash
 npm test
 ```
-
-## 想要真正“网页里直接编辑”
-
-如果你想在浏览器页面里点文字、直接改、保存到网站，目前还没有这个能力。需要额外做一个内容管理入口，至少包括：
-
-- 登录或访问保护。
-- 项目、分享、联系方式的编辑表单。
-- 保存数据的位置，例如 D1 数据库、JSON 文件、GitHub Contents API 或其他 CMS。
-- 发布或刷新机制。
-
-现在 `/admin` 只是预留入口，不是可用编辑后台。

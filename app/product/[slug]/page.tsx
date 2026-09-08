@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getPublicSiteContent } from "../../content-store";
 import {
-  getProjectBySlug,
   getProjectCategoryLabel,
   navItems,
   projects,
@@ -18,8 +18,11 @@ export function generateStaticParams() {
   return projects.map((project) => ({ slug: project.slug }));
 }
 
-export function generateMetadata({ params }: ProductPageProps): Metadata {
-  const project = getProjectBySlug(params.slug);
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const content = await getPublicSiteContent();
+  const project = content.projects.find(
+    (item) => item.slug === params.slug && item.isPublished,
+  );
 
   if (!project) {
     return {
@@ -33,8 +36,11 @@ export function generateMetadata({ params }: ProductPageProps): Metadata {
   };
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const project = getProjectBySlug(params.slug);
+export default async function ProductPage({ params }: ProductPageProps) {
+  const content = await getPublicSiteContent();
+  const project = content.projects.find(
+    (item) => item.slug === params.slug && item.isPublished,
+  );
 
   if (!project) {
     notFound();

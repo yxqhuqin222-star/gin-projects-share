@@ -55,6 +55,31 @@ export type Project = {
   paragraphs: string[];
 };
 
+export type ManagedProject = Project & {
+  id: string;
+  isPublished: boolean;
+};
+
+export type Share = {
+  id: string;
+  title: string;
+  group: string;
+  summary: string;
+};
+
+export type ContactLink = {
+  id: string;
+  label: string;
+  value: string;
+  href: string;
+};
+
+export type SiteContent = {
+  projects: ManagedProject[];
+  shares: Share[];
+  contactLinks: ContactLink[];
+};
+
 export const featuredProjectSlugs = [
   "paltform",
   "dingtalk-broadcast-console",
@@ -346,4 +371,28 @@ export function getProjectBySlug(slug: string) {
 
 export function getProjectCategoryLabel(categoryId: ProjectCategoryId) {
   return projectCategories.find((category) => category.id === categoryId)?.label ?? "项目";
+}
+
+/**
+ * The checked-in data is the initial public site and the safe runtime fallback.
+ * D1 overrides are validated before use and must have this same shape.
+ */
+export function createDefaultSiteContent(): SiteContent {
+  return {
+    projects: projects.map((project) => ({
+      ...project,
+      id: `project-${project.slug.replaceAll("_", "-")}`,
+      galleryImages: project.galleryImages ? [...project.galleryImages] : undefined,
+      paragraphs: [...project.paragraphs],
+      isPublished: true,
+    })),
+    shares: shares.map((share, index) => ({
+      ...share,
+      id: `share-${index + 1}`,
+    })),
+    contactLinks: contactLinks.map((link, index) => ({
+      ...link,
+      id: `contact-${index + 1}`,
+    })),
+  };
 }

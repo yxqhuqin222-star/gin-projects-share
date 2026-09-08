@@ -21,6 +21,8 @@ const consultationEnvNames = [
   "FEISHU_RECEIVE_ID",
   "FEISHU_RECEIVE_ID_TYPE",
   "FEISHU_EVENT_VERIFY_TOKEN",
+  "ADMIN_PASSWORD",
+  "ADMIN_SESSION_SECRET",
 ];
 
 function getConsultationVars() {
@@ -66,9 +68,13 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      host: "127.0.0.1",
+      port: Number(process.env.PORT ?? 3000),
+      ...(isCodexSeatbeltSandbox
+        ? { watch: { useFsEvents: false, usePolling: true } }
+        : {}),
+    },
     plugins: [
       vinext(),
       sites(),

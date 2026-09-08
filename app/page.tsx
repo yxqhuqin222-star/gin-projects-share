@@ -1,28 +1,21 @@
 import Link from "next/link";
 import { ConsultationWidget } from "./consultation-widget";
+import { getPublicSiteContent } from "./content-store";
 import { PortfolioRail } from "./portfolio-rail";
 import {
-  contactLinks,
   moduleItems,
   projectCategories,
-  projects,
-  shares,
+  type ManagedProject,
 } from "./site-data";
 
 const projectAnchor = (slug: string) => `project-${slug}`;
-
-const projectGroups = projectCategories.map((category) => ({
-  ...category,
-  description: "description" in category ? category.description : "",
-  projects: projects.filter((project) => project.categoryId === category.id),
-}));
 
 function ProjectEntry({
   categoryLabel,
   project,
 }: {
   categoryLabel: string;
-  project: (typeof projects)[number];
+  project: ManagedProject;
 }) {
   const projectMeta = project.status
     ? `${categoryLabel} - ${project.status}`
@@ -57,7 +50,12 @@ function ProjectEntry({
 function ProjectGroup({
   projectGroup,
 }: {
-  projectGroup: (typeof projectGroups)[number];
+  projectGroup: {
+    id: string;
+    label: string;
+    description: string;
+    projects: ManagedProject[];
+  };
 }) {
   return (
     <div
@@ -70,7 +68,7 @@ function ProjectGroup({
           <ProjectEntry
             categoryLabel={projectGroup.label}
             project={project}
-            key={project.slug}
+            key={project.id}
           />
         ))}
       </div>
@@ -78,7 +76,15 @@ function ProjectGroup({
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const content = await getPublicSiteContent();
+  const publishedProjects = content.projects.filter((project) => project.isPublished);
+  const projectGroups = projectCategories.map((category) => ({
+    ...category,
+    description: "description" in category ? category.description : "",
+    projects: publishedProjects.filter((project) => project.categoryId === category.id),
+  }));
+
   return (
     <main id="top">
       <PortfolioRail items={moduleItems} />
@@ -133,7 +139,7 @@ export default function Home() {
         >
           <div className="section-heading split-heading">
             <div>
-              <p className="eyebrow">{projects.length} projects</p>
+              <p className="eyebrow">{publishedProjects.length} projects</p>
               <h2 id="featured-title">项目</h2>
             </div>
             <p>
@@ -154,14 +160,14 @@ export default function Home() {
         >
           <div className="section-heading split-heading">
             <div>
-              <p className="eyebrow">{shares.length} notes</p>
+              <p className="eyebrow">{content.shares.length} notes</p>
               <h2 id="writing-title">分享</h2>
             </div>
           </div>
 
           <div className="writing-list">
-            {shares.map((share) => (
-              <article className="writing-card" key={share.title}>
+            {content.shares.map((share) => (
+              <article className="writing-card" key={share.id}>
                 <span>{share.group}</span>
                 <h3>{share.title}</h3>
                 <p>{share.summary}</p>
@@ -182,10 +188,10 @@ export default function Home() {
           </div>
 
           <div className="contact-list">
-            {contactLinks.map((link) => (
+            {content.contactLinks.map((link) => (
               <a
                 href={link.href}
-                key={link.label}
+                key={link.id}
                 target={link.href.startsWith("http") ? "_blank" : undefined}
                 rel={link.href.startsWith("http") ? "noreferrer" : undefined}
               >
@@ -194,6 +200,9 @@ export default function Home() {
               </a>
             ))}
           </div>
+          <Link className="admin-entry-link" href="/admin">
+            管理内容
+          </Link>
         </section>
       </div>
       <ConsultationWidget />

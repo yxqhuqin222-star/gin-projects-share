@@ -1,4 +1,4 @@
-import { index, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const consultationSessions = sqliteTable("consultation_sessions", {
   id: text("id").primaryKey(),
@@ -32,4 +32,18 @@ export const consultationMessages = sqliteTable(
 export const consultationSyncState = sqliteTable("consultation_sync_state", {
   source: text("source").primaryKey(),
   syncedAt: text("synced_at").notNull(),
+});
+
+export const siteContent = sqliteTable("site_content", {
+  id: text("id").primaryKey(),
+  payload: text("payload").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  version: integer("version").notNull().default(1),
+});
+
+export const adminLoginAttempts = sqliteTable("admin_login_attempts", {
+  key: text("key").primaryKey(),
+  failedCount: integer("failed_count").notNull(),
+  windowStartedAt: text("window_started_at").notNull(),
+  blockedUntil: text("blocked_until"),
 });
