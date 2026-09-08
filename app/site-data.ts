@@ -19,6 +19,11 @@ const projectModuleItems = [
 export const moduleItems = [
   ...projectModuleItems,
   {
+    id: "other",
+    label: "其他",
+    description: "不需要图片或详情页的轻量入口。",
+  },
+  {
     id: "writing",
     label: "分享",
     description: "读书、AI 工作流、生活观察和工具清单。",
@@ -74,10 +79,18 @@ export type ContactLink = {
   href: string;
 };
 
+export type OtherLink = {
+  id: string;
+  title: string;
+  summary: string;
+  href: string;
+};
+
 export type SiteContent = {
   projects: ManagedProject[];
   shares: Share[];
   contactLinks: ContactLink[];
+  otherLinks: OtherLink[];
 };
 
 export const featuredProjectSlugs = [
@@ -394,5 +407,6 @@ export function createDefaultSiteContent(): SiteContent {
       ...link,
       id: `contact-${index + 1}`,
     })),
+    otherLinks: [],
   };
 }

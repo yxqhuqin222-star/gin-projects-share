@@ -1,6 +1,7 @@
 import {
   type ContactLink,
   type ManagedProject,
+  type OtherLink,
   type ProjectCategoryId,
   projectCategories,
   type Share,
@@ -16,6 +17,7 @@ const PROJECT_SLUG_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/;
 const MAX_PROJECTS = 100;
 const MAX_SHARES = 100;
 const MAX_CONTACTS = 30;
+const MAX_OTHER_LINKS = 100;
 const categoryIds = new Set<string>(projectCategories.map((item) => item.id));
 
 function text(
@@ -149,6 +151,22 @@ function validateContact(value: unknown, index: number, issues: string[]): Conta
   };
 }
 
+function validateOtherLink(value: unknown, index: number, issues: string[]): OtherLink | null {
+  if (!value || typeof value !== "object") {
+    issues.push(`第${index + 1}条其他内容格式不正确。`);
+    return null;
+  }
+  const input = value as Record<string, unknown>;
+  const id = text(input.id, `其他内容 ${index + 1} ID`, issues, { max: 80 });
+  if (id && !ID_PATTERN.test(id)) issues.push(`其他内容 ${index + 1} ID格式无效。`);
+  return {
+    id,
+    title: text(input.title, `其他内容 ${index + 1}名称`, issues, { max: 140 }),
+    summary: text(input.summary, `其他内容 ${index + 1}说明`, issues, { max: 500 }),
+    href: safeUrl(input.href, `其他内容 ${index + 1}链接`, issues, { required: true }) ?? "",
+  };
+}
+
 function duplicateIssues(values: string[], label: string, issues: string[]) {
   const seen = new Set<string>();
   for (const value of values) {
@@ -170,11 +188,15 @@ export function validateSiteContent(value: unknown): ContentValidationResult {
   const contactLinks = array(input.contactLinks, "联系方式", issues, MAX_CONTACTS)
     .map((contact, index) => validateContact(contact, index, issues))
     .filter((contact): contact is ContactLink => Boolean(contact));
+  const otherLinks = array(input.otherLinks ?? [], "其他内容", issues, MAX_OTHER_LINKS)
+    .map((link, index) => validateOtherLink(link, index, issues))
+    .filter((link): link is OtherLink => Boolean(link));
 
   duplicateIssues(projects.map((project) => project.slug), "项目 slug", issues);
   duplicateIssues(projects.map((project) => project.id), "项目 ID", issues);
   duplicateIssues(shares.map((share) => share.id), "分享 ID", issues);
   duplicateIssues(contactLinks.map((contact) => contact.id), "联系方式 ID", issues);
+  duplicateIssues(otherLinks.map((link) => link.id), "其他内容 ID", issues);
 
-  return issues.length ? { ok: false, issues } : { ok: true, data: { projects, shares, contactLinks } };
+  return issues.length ? { ok: false, issues } : { ok: true, data: { projects, shares, contactLinks, otherLinks } };
 }

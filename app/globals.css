@@ -2951,8 +2951,14 @@ textarea:focus-visible {
 
   .detail-summary,
   .share-list,
-  .contact-list {
+  .contact-list,
+  .other-link-list {
     grid-template-columns: 1fr;
+  }
+
+  .other-link-list a {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .error-page-shell {
@@ -3506,6 +3512,54 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.68;
+}
+
+.other-link-list {
+  display: grid;
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.other-link-list a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+  padding: 22px 4px;
+  color: inherit;
+  transition: background 180ms var(--ease);
+}
+
+.other-link-list a:hover,
+.other-link-list a:focus-visible {
+  background: linear-gradient(90deg, transparent, rgba(19, 95, 195, 0.07));
+}
+
+.other-link-list span {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.other-link-list strong {
+  color: var(--fg);
+  font-size: 19px;
+  font-weight: 740;
+  letter-spacing: -0.02em;
+}
+
+.other-link-list small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.other-link-list b {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 720;
+  white-space: nowrap;
 }
 
 .contact-section {

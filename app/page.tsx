@@ -79,6 +79,9 @@ function ProjectGroup({
 export default async function Home() {
   const content = await getPublicSiteContent();
   const publishedProjects = content.projects.filter((project) => project.isPublished);
+  const visibleModuleItems = moduleItems.filter(
+    (item) => item.id !== "other" || content.otherLinks.length > 0,
+  );
   const projectGroups = projectCategories.map((category) => ({
     ...category,
     description: "description" in category ? category.description : "",
@@ -87,7 +90,7 @@ export default async function Home() {
 
   return (
     <main id="top">
-      <PortfolioRail items={moduleItems} />
+      <PortfolioRail items={visibleModuleItems} />
 
       <div className="portfolio-page">
         <header className="portfolio-mobile-header" aria-label="移动端站点头部">
@@ -175,6 +178,39 @@ export default async function Home() {
             ))}
           </div>
         </section>
+
+        {content.otherLinks.length ? (
+          <section
+            className="portfolio-section other-section"
+            id="other"
+            aria-labelledby="other-title"
+          >
+            <div className="section-heading split-heading">
+              <div>
+                <p className="eyebrow">{content.otherLinks.length} links</p>
+                <h2 id="other-title">其他</h2>
+              </div>
+              <p>不需要项目截图或详情页的轻量入口，保留必要说明与跳转链接。</p>
+            </div>
+
+            <div className="other-link-list">
+              {content.otherLinks.map((link) => (
+                <a
+                  href={link.href}
+                  key={link.id}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>
+                    <strong>{link.title}</strong>
+                    <small>{link.summary}</small>
+                  </span>
+                  <b aria-hidden="true">打开链接 →</b>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section
           className="portfolio-section contact-section"

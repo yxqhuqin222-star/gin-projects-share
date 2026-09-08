@@ -576,6 +576,12 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     const content = structuredClone(initial.content);
     content.projects[0].title = "D1 管理页测试项目";
     content.projects[1].isPublished = false;
+    content.otherLinks.push({
+      id: "other-test-link",
+      title: "其他入口测试",
+      summary: "不使用图片的轻量入口。",
+      href: "https://example.com/other-test",
+    });
 
     const unsafeContent = structuredClone(content);
     unsafeContent.projects[0].githubUrl = "javascript:alert(1)";
@@ -607,6 +613,8 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     const homepageHtml = await homepage.text();
     assert.match(homepageHtml, /D1 管理页测试项目/);
     assert.doesNotMatch(homepageHtml, /钉钉播报控制台/);
+    assert.match(homepageHtml, /其他入口测试/);
+    assert.match(homepageHtml, /不使用图片的轻量入口/);
 
     const detail = await request("/product/paltform");
     assert.equal(detail.status, 200);

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { projectCategories, type ContactLink, type ManagedProject, type Share, type SiteContent } from "../site-data";
+import { projectCategories, type ContactLink, type ManagedProject, type OtherLink, type Share, type SiteContent } from "../site-data";
 
-type Section = "projects" | "shares" | "contacts";
-const emptyContent: SiteContent = { projects: [], shares: [], contactLinks: [] };
+type Section = "projects" | "shares" | "others" | "contacts";
+const emptyContent: SiteContent = { projects: [], shares: [], otherLinks: [], contactLinks: [] };
 
 function localId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -38,6 +38,7 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
   const selected = useMemo(() => {
     if (section === "projects") return content.projects[selectedIndex];
     if (section === "shares") return content.shares[selectedIndex];
+    if (section === "others") return content.otherLinks[selectedIndex];
     return content.contactLinks[selectedIndex];
   }, [content, section, selectedIndex]);
 
@@ -92,12 +93,17 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
   function updateContact(patch: Partial<ContactLink>) {
     setContent((current) => ({ ...current, contactLinks: current.contactLinks.map((item, index) => index === selectedIndex ? { ...item, ...patch } : item) })); setDirty(true);
   }
+  function updateOtherLink(patch: Partial<OtherLink>) {
+    setContent((current) => ({ ...current, otherLinks: current.otherLinks.map((item, index) => index === selectedIndex ? { ...item, ...patch } : item) })); setDirty(true);
+  }
 
   function addEntry() {
     if (section === "projects") {
       setContent((current) => ({ ...current, projects: [...current.projects, { id: localId("project"), slug: "new-project", title: "新项目", githubUrl: "https://github.com/", categoryId: projectCategories[0].id, status: "", monogram: "项目", summary: "请填写项目摘要。", intro: "请填写项目介绍。", paragraphs: ["请填写可核验的项目说明。"], isPublished: false }] })); setSelectedIndex(content.projects.length);
     } else if (section === "shares") {
       setContent((current) => ({ ...current, shares: [...current.shares, { id: localId("share"), title: "新分享", group: "Notes", summary: "请填写分享说明。" }] })); setSelectedIndex(content.shares.length);
+    } else if (section === "others") {
+      setContent((current) => ({ ...current, otherLinks: [...current.otherLinks, { id: localId("other"), title: "新入口", summary: "请填写入口说明。", href: "https://" }] })); setSelectedIndex(content.otherLinks.length);
     } else {
       setContent((current) => ({ ...current, contactLinks: [...current.contactLinks, { id: localId("contact"), label: "新联系方式", value: "", href: "mailto:" }] })); setSelectedIndex(content.contactLinks.length);
     }
@@ -107,6 +113,7 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
   function removeEntry() {
     if (section === "projects") return;
     if (section === "shares") setContent((current) => ({ ...current, shares: current.shares.filter((_, index) => index !== selectedIndex) }));
+    else if (section === "others") setContent((current) => ({ ...current, otherLinks: current.otherLinks.filter((_, index) => index !== selectedIndex) }));
     else setContent((current) => ({ ...current, contactLinks: current.contactLinks.filter((_, index) => index !== selectedIndex) }));
     setSelectedIndex((current) => Math.max(0, current - 1));
     setDirty(true);
@@ -114,27 +121,29 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
   function reorder(direction: -1 | 1) {
     if (section === "projects") setContent((current) => ({ ...current, projects: move(current.projects, selectedIndex, direction) }));
     if (section === "shares") setContent((current) => ({ ...current, shares: move(current.shares, selectedIndex, direction) }));
+    if (section === "others") setContent((current) => ({ ...current, otherLinks: move(current.otherLinks, selectedIndex, direction) }));
     if (section === "contacts") setContent((current) => ({ ...current, contactLinks: move(current.contactLinks, selectedIndex, direction) }));
     setSelectedIndex((current) => current + direction); setDirty(true);
   }
 
-  if (!authenticated) return <section className="admin-login" aria-labelledby="admin-title"><p className="eyebrow">Private content studio</p><h1 id="admin-title">管理站点内容。</h1><p>登录后可维护项目、分享与联系方式。保存后公开页面会即时更新。</p><form onSubmit={login}><Field label="管理密码"><input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field><button className="button primary" type="submit">登录</button></form>{issues.length ? <p className="admin-message error">{issues[0]}</p> : null}</section>;
+  if (!authenticated) return <section className="admin-login" aria-labelledby="admin-title"><p className="eyebrow">Private content studio</p><h1 id="admin-title">管理站点内容。</h1><p>登录后可维护项目、分享、其他入口与联系方式。保存后公开页面会即时更新。</p><form onSubmit={login}><Field label="管理密码"><input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field><button className="button primary" type="submit">登录</button></form>{issues.length ? <p className="admin-message error">{issues[0]}</p> : null}</section>;
 
-  const entries = section === "projects" ? content.projects : section === "shares" ? content.shares : content.contactLinks;
-  const entryName = (entry: ManagedProject | Share | ContactLink) => "slug" in entry ? entry.title : "group" in entry ? entry.title : entry.label;
+  const entries = section === "projects" ? content.projects : section === "shares" ? content.shares : section === "others" ? content.otherLinks : content.contactLinks;
+  const entryName = (entry: ManagedProject | Share | OtherLink | ContactLink) => "slug" in entry || "summary" in entry ? entry.title : "group" in entry ? entry.title : entry.label;
   const onText = (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = event.target.value;
     if (section === "projects") updateProject({ [key]: value } as Partial<ManagedProject>);
     if (section === "shares") updateShare({ [key]: value } as Partial<Share>);
+    if (section === "others") updateOtherLink({ [key]: value } as Partial<OtherLink>);
     if (section === "contacts") updateContact({ [key]: value } as Partial<ContactLink>);
   };
 
   return <section className="admin-studio" aria-labelledby="admin-title">
     <div className="admin-studio-header"><div><p className="eyebrow">Private content studio</p><h1 id="admin-title">内容管理</h1></div><div className="admin-header-actions"><span>{dirty ? "有未保存改动" : "已同步"}</span><button type="button" className="text-button" onClick={logout}>退出登录</button></div></div>
     {loading ? <p className="admin-message">正在读取内容…</p> : <div className="admin-grid">
-      <aside className="admin-list" aria-label="内容条目"><div className="admin-sections">{(["projects", "shares", "contacts"] as Section[]).map((item) => <button key={item} type="button" className={section === item ? "active" : ""} onClick={() => { setSection(item); setSelectedIndex(0); }}>{item === "projects" ? "项目" : item === "shares" ? "分享" : "联系"}</button>)}</div><div className="admin-list-actions"><button type="button" onClick={addEntry}>新增</button><button type="button" disabled={selectedIndex === 0} onClick={() => reorder(-1)}>上移</button><button type="button" disabled={selectedIndex >= entries.length - 1} onClick={() => reorder(1)}>下移</button>{section !== "projects" ? <button type="button" className="danger" onClick={removeEntry}>删除</button> : null}</div><div className="admin-entry-list">{entries.map((entry, index) => <button type="button" key={entry.id} className={selectedIndex === index ? "active" : ""} onClick={() => setSelectedIndex(index)}>{entryName(entry)}</button>)}</div></aside>
-      <div className="admin-editor">{section === "projects" && selected ? <ProjectEditor project={selected as ManagedProject} onText={onText} updateProject={updateProject} /> : null}{section === "shares" && selected ? <ShareEditor share={selected as Share} onText={onText} /> : null}{section === "contacts" && selected ? <ContactEditor contact={selected as ContactLink} onText={onText} /> : null}{!selected ? <p className="admin-empty">选择或新增一条内容开始编辑。</p> : null}</div>
-      <aside className="admin-preview" aria-label="保存与预览"><p className="eyebrow">Publish check</p><h2>{dirty ? "改动尚未公开" : "内容已保存"}</h2><p>保存会一次性更新项目、分享和联系方式。字段有误时不会写入数据库。</p>{section === "projects" && selected && "slug" in selected ? <a href={`/product/${selected.slug}`} target="_blank" rel="noreferrer">打开项目公开页 ↗</a> : <a href="/" target="_blank" rel="noreferrer">打开首页 ↗</a>}<button type="button" className="button primary" disabled={!dirty || saving} onClick={save}>{saving ? "保存中…" : "保存并发布"}</button>{notice ? <p className="admin-message success">{notice}</p> : null}{issues.length ? <ul className="admin-message error">{issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : null}</aside>
+      <aside className="admin-list" aria-label="内容条目"><div className="admin-sections">{(["projects", "shares", "others", "contacts"] as Section[]).map((item) => <button key={item} type="button" className={section === item ? "active" : ""} onClick={() => { setSection(item); setSelectedIndex(0); }}>{item === "projects" ? "项目" : item === "shares" ? "分享" : item === "others" ? "其他" : "联系"}</button>)}</div><div className="admin-list-actions"><button type="button" onClick={addEntry}>新增</button><button type="button" disabled={selectedIndex === 0} onClick={() => reorder(-1)}>上移</button><button type="button" disabled={selectedIndex >= entries.length - 1} onClick={() => reorder(1)}>下移</button>{section !== "projects" ? <button type="button" className="danger" onClick={removeEntry}>删除</button> : null}</div><div className="admin-entry-list">{entries.map((entry, index) => <button type="button" key={entry.id} className={selectedIndex === index ? "active" : ""} onClick={() => setSelectedIndex(index)}>{entryName(entry)}</button>)}</div></aside>
+      <div className="admin-editor">{section === "projects" && selected ? <ProjectEditor project={selected as ManagedProject} onText={onText} updateProject={updateProject} /> : null}{section === "shares" && selected ? <ShareEditor share={selected as Share} onText={onText} /> : null}{section === "others" && selected ? <OtherLinkEditor link={selected as OtherLink} onText={onText} /> : null}{section === "contacts" && selected ? <ContactEditor contact={selected as ContactLink} onText={onText} /> : null}{!selected ? <p className="admin-empty">选择或新增一条内容开始编辑。</p> : null}</div>
+      <aside className="admin-preview" aria-label="保存与预览"><p className="eyebrow">Publish check</p><h2>{dirty ? "改动尚未公开" : "内容已保存"}</h2><p>保存会一次性更新项目、分享、其他入口和联系方式。字段有误时不会写入数据库。</p>{section === "projects" && selected && "slug" in selected ? <a href={`/product/${selected.slug}`} target="_blank" rel="noreferrer">打开项目公开页 ↗</a> : <a href="/" target="_blank" rel="noreferrer">打开首页 ↗</a>}<button type="button" className="button primary" disabled={!dirty || saving} onClick={save}>{saving ? "保存中…" : "保存并发布"}</button>{notice ? <p className="admin-message success">{notice}</p> : null}{issues.length ? <ul className="admin-message error">{issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : null}</aside>
     </div>}
   </section>;
 }
@@ -145,6 +154,10 @@ function ProjectEditor({ project, onText, updateProject }: { project: ManagedPro
 
 function ShareEditor({ share, onText }: { share: Share; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {
   return <><div className="admin-editor-heading"><div><p className="eyebrow">Share</p><h2>{share.title}</h2></div></div><div className="admin-fields"><Field label="标题"><input value={share.title} onChange={onText("title")} /></Field><Field label="分组"><input value={share.group} onChange={onText("group")} /></Field><Field label="摘要"><textarea value={share.summary} onChange={onText("summary")} /></Field></div></>;
+}
+
+function OtherLinkEditor({ link, onText }: { link: OtherLink; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {
+  return <><div className="admin-editor-heading"><div><p className="eyebrow">Other</p><h2>{link.title}</h2></div></div><div className="admin-fields"><Field label="名称"><input value={link.title} onChange={onText("title")} /></Field><Field label="简单说明"><textarea value={link.summary} onChange={onText("summary")} /></Field><Field label="跳转链接"><input inputMode="url" value={link.href} onChange={onText("href")} /></Field></div></>;
 }
 
 function ContactEditor({ contact, onText }: { contact: ContactLink; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {
