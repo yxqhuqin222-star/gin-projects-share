@@ -2,8 +2,10 @@ import Link from "next/link";
 import { ConsultationWidget } from "./consultation-widget";
 import { getPublicSiteContent } from "./content-store";
 import { PortfolioRail } from "./portfolio-rail";
+import { ProjectWorkflow } from "./project-workflow";
+import { ContactList } from "./contact-list";
 import {
-  moduleItems,
+  getVisibleModuleItems,
   projectCategories,
   type ManagedProject,
 } from "./site-data";
@@ -24,24 +26,27 @@ function ProjectEntry({
   return (
     <article className="work-card" id={projectAnchor(project.slug)}>
       <Link className="work-card-link" href={`/product/${project.slug}`}>
-        <span className="work-card-visual">
+        <div className={`work-card-visual${project.workflow && !project.image ? " work-card-flow" : ""}`}>
           {project.image ? (
             <img
-              alt={`${project.title} 项目截图`}
+              alt={`${project.title} 项目展示图`}
               loading="lazy"
               src={project.image}
             />
+          ) : project.workflow ? (
+            <ProjectWorkflow workflow={project.workflow} compact />
           ) : (
             <span className="work-card-placeholder">
               <strong>{project.monogram}</strong>
               <small>暂无可核验公开截图</small>
             </span>
           )}
-        </span>
-        <span className="work-card-copy">
+        </div>
+        <div className="work-card-copy">
           <small>{projectMeta}</small>
           <strong>{project.title}</strong>
-        </span>
+          <p>{project.summary}</p>
+        </div>
       </Link>
     </article>
   );
@@ -79,9 +84,7 @@ function ProjectGroup({
 export default async function Home() {
   const content = await getPublicSiteContent();
   const publishedProjects = content.projects.filter((project) => project.isPublished);
-  const visibleModuleItems = moduleItems.filter(
-    (item) => item.id !== "other" || content.otherLinks.length > 0,
-  );
+  const visibleModuleItems = getVisibleModuleItems(content);
   const projectGroups = projectCategories.map((category) => ({
     ...category,
     description: "description" in category ? category.description : "",
@@ -146,7 +149,7 @@ export default async function Home() {
               <h2 id="featured-title">项目</h2>
             </div>
             <p>
-              首页先展示项目主图、类型标签和标题，点击项目进入详情页查看完整背景、边界和更多截图。
+              从工作中的具体问题出发，记录工具、流程和实际产出。
             </p>
           </div>
 
@@ -163,8 +166,8 @@ export default async function Home() {
         >
           <div className="section-heading split-heading">
             <div>
-              <p className="eyebrow">{content.shares.length} notes</p>
-              <h2 id="writing-title">分享</h2>
+              <p className="eyebrow">Notes & interests</p>
+              <h2 id="writing-title">兴趣与记录</h2>
             </div>
           </div>
 
@@ -223,19 +226,7 @@ export default async function Home() {
             <p>如果你对我感兴趣，可以通过以下方式联系我。</p>
           </div>
 
-          <div className="contact-list">
-            {content.contactLinks.map((link) => (
-              <a
-                href={link.href}
-                key={link.id}
-                target={link.href.startsWith("http") ? "_blank" : undefined}
-                rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-              >
-                <span>{link.label}</span>
-                <strong>{link.value}</strong>
-              </a>
-            ))}
-          </div>
+          <ContactList links={content.contactLinks} />
           <Link className="admin-entry-link" href="/admin">
             管理内容
           </Link>

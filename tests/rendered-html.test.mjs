@@ -163,8 +163,13 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /Gin - 项目与分享/);
   assert.match(html, /My Work\./);
   assert.match(html, /projects/);
-  assert.match(html, /首页先展示项目主图、类型标签和标题/);
-  assert.match(html, /暂无可核验公开截图/);
+  assert.match(html, /从工作中的具体问题出发/);
+  assert.match(html, /把自己的笔记素材保存到 Mac/);
+  assert.match(html, /兴趣与记录/);
+  assert.match(html, /复制微信号/);
+  assert.match(html, /拨打电话/);
+  assert.doesNotMatch(html, /4 notes|href="\/#other"/);
+  assert.match(html, /流程示意/);
   assert.match(html, /工作 - 工具/);
   assert.match(html, /skills及工具 - Skill/);
   assert.match(html, /个人提效 - 静态应用/);
@@ -173,7 +178,7 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /个人提效/);
   assert.match(html, /分享/);
   assert.match(html, /联系/);
-  assert.match(html, /DialKit Tuner/);
+  assert.match(html, /DialKit 界面调参/);
   assert.match(html, /xhs-photo-downloader/);
   assert.match(html, /xiaoming-feishu-bot/);
   assert.match(html, /href="\/product\/rizhuizong"/);
@@ -476,14 +481,29 @@ test("server-renders project detail pages with professional labels", async () =>
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /Renxiao Dashboard/);
-  assert.match(html, /一句话/);
-  assert.match(html, /仓库主页/);
+  assert.match(html, /人效与成本看板/);
+  assert.match(html, /计算成本与转化/);
+  assert.match(html, /查看代码与使用指南/);
   assert.match(html, /打开页面/);
   assert.doesNotMatch(html, /来源/);
   assert.doesNotMatch(html, /GitHub README 和本地项目截图/);
   assert.doesNotMatch(html, /CASE STUDY|Overview|Stack \/ Type|Links|Back to Projects/);
   assert.doesNotMatch(html, /代码仓库|所属类别|相关链接/);
+});
+
+test("XHS sample shows a concise workflow without repeating the legacy copy", async () => {
+  const response = await render("/product/xhs-photo-downloader");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  // Restrict assertions to rendered UI; RSC payloads may retain legacy data.
+  const main = html.match(/<main\b[\s\S]*?<\/main>/)?.[0] ?? "";
+  assert.match(main, /小红书 Live Photo 备份整理/);
+  assert.match(main, /登录自己的账号[\s\S]*导出笔记链接[\s\S]*下载原始素材[\s\S]*另行整理文件/);
+  assert.equal((main.match(/把自己的笔记素材保存到 Mac/g) ?? []).length, 1);
+  assert.match(main, /照片与动态文件配对命名/);
+  assert.match(main, /整理需单独执行/);
+  assert.match(main, /查看代码与使用指南/);
+  assert.doesNotMatch(main, /一句话|README 明确|不抓取|href="\/#other"/);
 });
 
 test("unknown routes render the branded 404 page", async () => {
@@ -574,6 +594,10 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     const initial = await initialResponse.json();
     assert.equal(initial.version, 0);
     const content = structuredClone(initial.content);
+    const xhs = content.projects.find((project) => project.slug === "xhs-photo-downloader");
+    const legacyParagraphs = [...xhs.paragraphs];
+    xhs.workflow.note = "本地编辑后的使用说明";
+    content.projects[0].galleryCaptions = ["工具广场界面"];
     content.projects[0].title = "D1 管理页测试项目";
     content.projects[1].isPublished = false;
     content.otherLinks.push({
@@ -592,6 +616,21 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     });
     assert.equal(invalidSave.status, 400);
 
+    for (const patch of [
+      { steps: ["一", "二", "三", "四", "五"] },
+      { steps: [] },
+      { features: ["一", "二", "三", "四"] },
+    ]) {
+      const invalidContent = structuredClone(content);
+      const sample = invalidContent.projects.find((project) => project.slug === xhs.slug);
+      Object.assign(sample.workflow, patch);
+      const rejected = await request("/api/admin/content", {
+        method: "PUT", headers: { "content-type": "application/json", cookie },
+        body: JSON.stringify({ content: invalidContent, expectedVersion: initial.version }),
+      });
+      assert.equal(rejected.status, 400);
+    }
+
     const save = await request("/api/admin/content", {
       method: "PUT",
       headers: { "content-type": "application/json", cookie },
@@ -600,6 +639,16 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     assert.equal(save.status, 200, JSON.stringify(await save.clone().json()));
     const saved = await save.clone().json();
     assert.equal(saved.version, 1);
+    const readBack = await (await request("/api/admin/content", { headers: { cookie } })).json();
+    const savedSample = readBack.content.projects.find((project) => project.slug === xhs.slug);
+    assert.deepEqual(savedSample.workflow, xhs.workflow);
+    assert.deepEqual(savedSample.paragraphs, legacyParagraphs);
+    assert.deepEqual(readBack.content.projects[0].workflow, content.projects[0].workflow);
+    assert.deepEqual(readBack.content.projects[0].galleryCaptions, ["工具广场界面"]);
+    const samplePage = await request(`/product/${xhs.slug}`);
+    const sampleHtml = await samplePage.text();
+    assert.match(sampleHtml, /本地编辑后的使用说明/);
+    assert.doesNotMatch(sampleHtml.match(/<main\b[\s\S]*?<\/main>/)?.[0] ?? "", /README 明确/);
 
     const staleSave = await request("/api/admin/content", {
       method: "PUT",

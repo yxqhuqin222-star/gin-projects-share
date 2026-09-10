@@ -1980,7 +1980,7 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 32px;
   background: rgba(255, 255, 255, 0.72);
-  padding: clamp(34px, 6vw, 68px);
+  padding: clamp(24px, 4vw, 32px);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(24px) saturate(170%);
 }
@@ -1994,7 +1994,8 @@ textarea:focus-visible {
 .detail-hero h1 {
   margin-top: 12px;
   color: var(--fg);
-  font-size: clamp(46px, 8vw, 92px);
+  font-size: clamp(30px, 4vw, 46px);
+  overflow-wrap: anywhere;
   font-weight: 790;
   letter-spacing: 0;
   line-height: 0.98;
@@ -3152,7 +3153,7 @@ textarea:focus-visible {
 .portfolio-page {
   width: min(100% - 32px, var(--portfolio-column));
   margin: 0 auto;
-  padding: 72px 0 96px;
+  padding: 40px 0 96px;
 }
 
 .portfolio-rail {
@@ -3267,7 +3268,7 @@ textarea:focus-visible {
 }
 
 .portfolio-hero {
-  padding: 12px 0 78px;
+  padding: 8px 0 36px;
 }
 
 .hero-identity {
@@ -3324,7 +3325,7 @@ textarea:focus-visible {
 }
 
 .portfolio-section {
-  padding: 72px 0 0;
+  padding: 36px 0 0;
   border-top: 1px dashed var(--line);
   scroll-margin-top: 42px;
 }
@@ -3689,7 +3690,7 @@ textarea:focus-visible {
   }
 
   .portfolio-hero {
-    padding: 44px 0 64px;
+    padding: 28px 0 32px;
   }
 
   .hero-identity {
@@ -3719,18 +3720,43 @@ textarea:focus-visible {
   }
 
   .hero-identity {
-    grid-template-columns: 1fr;
+    grid-template-columns: 60px minmax(0, 1fr);
   }
 
   .hero-avatar {
-    width: 72px;
+    width: 60px;
   }
 
   .portfolio-section {
-    padding-top: 58px;
+    padding-top: 32px;
   }
 
   .section-heading h2 {
     font-size: clamp(32px, 10vw, 42px);
   }
+}
+
+/* Readable project summaries and explicit contact actions. */
+.work-card-copy p {
+  margin: 2px 0 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: #626662;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.work-card-flow { aspect-ratio: auto; background: #f4f4ef; box-shadow: none; }
+.contact-wechat { display: grid; padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.56); }
+.contact-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.contact-actions button, .contact-actions a { display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--accent); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+.contact-notice { color: var(--muted); font-size: 13px; min-height: 1.5em; }
+.admin-workflow-fields { padding: 20px; border: 1px solid var(--line); border-radius: 12px; }
+.admin-workflow-fields legend { padding: 0 6px; font-weight: 700; }
+.admin-workflow-help { margin: 12px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+@media (max-width: 460px) {
+  .work-card { padding: 16px; }
+  .work-card-copy small { font-size: 14px; }
+  .work-card-copy p { font-size: 14px; }
 }

@@ -3,6 +3,7 @@ import {
   type ManagedProject,
   type OtherLink,
   type ProjectCategoryId,
+  type ProjectWorkflow,
   projectCategories,
   type Share,
   type SiteContent,
@@ -100,6 +101,29 @@ function validateProject(value: unknown, index: number, issues: string[]): Manag
     )
     .filter(Boolean);
 
+  const galleryCaptions = input.galleryCaptions === undefined ? undefined
+    : array(input.galleryCaptions, `${prefix}图片说明`, issues, 12).map((caption, captionIndex) =>
+      text(caption, `${prefix}图片说明 ${captionIndex + 1}`, issues, { required: false, max: 160 }),
+    );
+
+  let workflow: ProjectWorkflow | undefined;
+  if (input.workflow !== undefined) {
+    if (!input.workflow || typeof input.workflow !== "object" || Array.isArray(input.workflow)) {
+      issues.push(`${prefix}流程介绍格式不正确。`);
+    } else {
+      const value = input.workflow as Record<string, unknown>;
+      const steps = array(value.steps, `${prefix}流程步骤`, issues, 4)
+        .map((step, stepIndex) => text(step, `${prefix}步骤 ${stepIndex + 1}`, issues, { max: 24 }));
+      if (!steps.length) issues.push(`${prefix}至少需要一个流程步骤。`);
+      workflow = {
+        steps,
+        features: array(value.features ?? [], `${prefix}功能点`, issues, 3)
+          .map((feature, featureIndex) => text(feature, `${prefix}功能点 ${featureIndex + 1}`, issues, { max: 40 })),
+        note: text(value.note, `${prefix}使用说明`, issues, { required: false, max: 240 }),
+      };
+    }
+  }
+
   return {
     id,
     slug,
@@ -114,6 +138,8 @@ function validateProject(value: unknown, index: number, issues: string[]): Manag
     sourceNote: text(input.sourceNote, `${prefix}证据备注`, issues, { required: false, max: 800 }) || undefined,
     image: safeUrl(input.image, `${prefix}封面图`, issues, { allowProjectAsset: true }),
     galleryImages: galleryImages.length ? galleryImages : undefined,
+    galleryCaptions,
+    workflow,
     paragraphs,
     isPublished: input.isPublished !== false,
   };

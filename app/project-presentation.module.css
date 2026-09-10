@@ -1,0 +1,185 @@
+.workflow {
+  padding: 28px;
+  border: 1px solid #deded8;
+  border-radius: 18px;
+  background: #f4f4ef;
+  color: #242526;
+}
+
+.flowLabel {
+  margin: 0 0 22px;
+  font-size: 13px;
+  font-weight: 650;
+  color: #60635f;
+}
+
+.steps {
+  display: flex;
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.steps li {
+  flex: 1;
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 17px 12px;
+  border: 1px solid #e2e3dc;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.steps li:last-child {
+  border-color: #b5c9bf;
+  background: #eaf2ec;
+}
+
+.steps li:not(:last-child)::after {
+  content: "→";
+  position: absolute;
+  right: -21px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #707870;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.stepNumber {
+  color: #69796f;
+  font-size: 13px;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.features li::before {
+  content: "✓";
+  margin-right: 6px;
+  color: #3c6952;
+}
+
+.note {
+  margin: 18px 0 0;
+  color: #666b65;
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.cover {
+  width: 100%;
+  padding: 28px;
+  border: 0;
+  border-radius: inherit;
+}
+
+.cover .steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+
+.cover .steps li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cover .steps li:nth-child(2)::after { content: none; }
+.cover .note { margin-top: 18px; }
+
+.conciseHero.conciseHero {
+  margin-top: 24px;
+  padding: 0 0 28px;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+}
+
+.conciseHero.conciseHero h1 {
+  margin-top: 12px;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.22;
+  text-wrap: pretty;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.conciseHero .intro {
+  margin-top: 16px;
+  color: #555955;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.75;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 24px;
+}
+
+.actions a { font-size: 14px; gap: 14px; }
+.concisePage :global(.detail-bottom) { justify-content: flex-start; margin-top: 28px; }
+
+.gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  width: min(var(--portfolio-column), calc(100% - 32px));
+  margin: 28px auto 0;
+}
+
+.gallery figure { min-width: 0; margin: 0; }
+.gallery figcaption { margin: 10px 2px 0; color: #676b67; font-size: 13px; line-height: 1.6; }
+.imageButton { position: relative; display: block; width: 100%; overflow: hidden; padding: 0; border: 1px solid #deded8; border-radius: 12px; background: white; cursor: zoom-in; }
+.imageButton img { display: block; width: 100%; height: auto; object-fit: contain; }
+.zoomHint { position: absolute; right: 10px; bottom: 10px; padding: 6px 10px; border: 1px solid #deded8; border-radius: 6px; color: #393d39; background: #fffffff2; font-size: 12px; }
+
+.lightbox { position: fixed; inset: 0; width: min(1200px, calc(100% - 24px)); max-width: none; max-height: calc(100dvh - 24px); margin: auto; padding: 0; border: 1px solid #d9d9d5; border-radius: 14px; background: #fafaf7; color: #242526; overflow: auto; overscroll-behavior: contain; }
+.lightbox::backdrop { background: #141814b8; }
+.lightboxContent { padding: 16px; }
+.lightboxBar { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -16px -16px 16px; padding: 10px 16px; border-bottom: 1px solid #deded8; background: #fafaf7; }
+.lightboxBar p { font-size: 14px; line-height: 1.5; }
+.lightboxBar button { flex-shrink: 0; min-height: 44px; padding: 8px 14px; border: 1px solid #d4d6cf; border-radius: 8px; color: inherit; background: white; cursor: pointer; }
+.lightboxContent > img { display: block; width: 100%; height: auto; object-fit: contain; }
+.lightboxContent > a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; font-size: 14px; }
+
+@media (max-width: 600px) {
+  .workflow { padding: 22px; }
+  .steps { flex-direction: column; gap: 22px; }
+  .steps li { display: flex; align-items: baseline; gap: 16px; padding: 14px 16px; }
+  .steps li:not(:last-child)::after { content: "↓"; top: auto; bottom: -22px; left: 22px; right: auto; transform: none; }
+  .flowLabel { margin-bottom: 18px; }
+  .features { flex-direction: column; gap: 8px; margin-top: 22px; }
+  .conciseHero .intro { font-size: 16px; }
+  .cover { padding: 20px; }
+  .cover .steps { gap: 10px; }
+  .cover .steps li { padding: 12px 8px; gap: 8px; font-size: 13px; }
+  .cover .steps li::after { content: none; }
+  .cover .stepNumber { font-size: 11px; }
+  .cover .note { font-size: 12px; line-height: 1.6; }
+  .lightboxBar { gap: 8px; }
+  .lightboxBar p { font-size: 12px; }
+}

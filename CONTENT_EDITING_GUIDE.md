@@ -53,9 +53,13 @@ ADMIN_SESSION_SECRET=<至少 32 个字符的随机字符串>
 | 详情页“打开页面/访问”链接 | `projects[].liveUrl` |
 | 项目主图 | `projects[].image` |
 | 项目详情图组 | `projects[].galleryImages` |
+| 图片说明（与图组逐项对应） | `projects[].galleryCaptions`，可选 |
+| 简洁流程介绍 | `projects[].workflow`，可选：`steps` 最多 4 步、`features` 最多 3 个、`note` 为简短使用说明 |
 | 分享区卡片 | `shares` |
 | 其他入口列表 | `otherLinks` |
 | 联系方式 | `contactLinks` |
+
+配置 `workflow` 后，详情只显示标题、`intro`、流程、功能点和操作入口，原有 `paragraphs` 保留但不重复展示；未配置的项目继续使用原模板。没有封面图时，首页用同一流程组件展示功能。后台可编辑这些字段。线上 D1 已保存的内容优先于源码默认值，修改默认值不会覆盖后台内容。
 
 一个项目的数据大概长这样：
 
