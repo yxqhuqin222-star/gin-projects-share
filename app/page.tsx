@@ -5,6 +5,8 @@ import { PortfolioRail } from "./portfolio-rail";
 import { ProjectWorkflow } from "./project-workflow";
 import { ContactList } from "./contact-list";
 import {
+  experience,
+  experienceSkills,
   getVisibleModuleItems,
   projectCategories,
   type ManagedProject,
@@ -100,6 +102,7 @@ export default async function Home() {
           <Link className="mobile-brand" href="/">
             Gin
           </Link>
+          <a href="#experience">经历</a>
           <a href="#selected">项目</a>
           <a href="#contact">联系</a>
         </header>
@@ -121,6 +124,9 @@ export default async function Home() {
           </p>
 
           <div className="hero-actions" aria-label="快速入口">
+            <a className="button secondary" href="#experience">
+              工作经历
+            </a>
             <a className="button primary" href="#selected">
               查看项目
             </a>
@@ -135,6 +141,45 @@ export default async function Home() {
             <a className="button secondary" href="#contact">
               联系
             </a>
+          </div>
+        </section>
+
+        <section
+          className="portfolio-section experience-section"
+          id="experience"
+          aria-labelledby="experience-title"
+        >
+          <div className="section-heading split-heading">
+            <div>
+              <p className="eyebrow">Experience</p>
+              <h2 id="experience-title">工作经历</h2>
+            </div>
+            <p>从项目管理、产品运营到 AI 产品实践，持续把业务问题转化为可落地的产品与流程。</p>
+          </div>
+
+          <div className="experience-grid">
+            {experience.map((item, index) => (
+              <article className="experience-card" key={item.company}>
+                <span className="experience-index">{String(index + 1).padStart(2, "0")}</span>
+                <div className="experience-card-copy">
+                  <h3>{item.company}</h3>
+                  <p className="experience-role">{item.role}</p>
+                  <p className="experience-summary">{item.summary}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="experience-skills">
+            <div>
+              <p className="eyebrow">Skills</p>
+              <h3>核心技能</h3>
+            </div>
+            <div className="skill-list" aria-label="核心技能列表">
+              {experienceSkills.map((skill) => (
+                <span key={skill}>{skill}</span>
+              ))}
+            </div>
           </div>
         </section>
 

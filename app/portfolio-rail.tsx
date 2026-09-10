@@ -25,6 +25,14 @@ function RailIcon({ id }: { id: string }) {
     );
   }
 
+  if (id === "experience") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M7 5.5A2.5 2.5 0 0 1 9.5 3h5A2.5 2.5 0 0 1 17 5.5V7h1.5A2.5 2.5 0 0 1 21 9.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-9A2.5 2.5 0 0 1 5.5 7H7V5.5Zm2 1.5h6V5.5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0-.5.5V7Zm-4 4v7a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-7A13.4 13.4 0 0 1 12 13a13.4 13.4 0 0 1-7-2Z" />
+      </svg>
+    );
+  }
+
   if (id === "skills-tools") {
     return (
       <svg aria-hidden="true" viewBox="0 0 24 24">

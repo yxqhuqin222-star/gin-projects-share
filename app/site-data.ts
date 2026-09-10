@@ -16,7 +16,43 @@ const projectModuleItems = [
   },
 ] as const;
 
+export const experience = [
+  {
+    company: "龙猫数据",
+    role: "项目经理",
+    summary: "负责数据采集与标注项目的管理、推进与交付。",
+  },
+  {
+    company: "智联招聘",
+    role: "产品运营",
+    summary: "负责 AI 客服机器人的搭建、运营与持续优化。",
+  },
+  {
+    company: "水滴科技",
+    role: "AI 产品运营 / AI 产品经理",
+    summary: "负责 AI 对话机器人的搭建、运营与效果优化；参与对话平台迭代、大模型训练、效果评估与上线应用。",
+  },
+  {
+    company: "作业帮",
+    role: "流量策略运营",
+    summary: "负责线索与销售匹配策略设计与优化，支持业务目标达成；参与业务工作台优化。",
+  },
+] as const;
+
+export const experienceSkills = [
+  "大模型项目全流程实践",
+  "AI 对话 / 客服机器人搭建与运营",
+  "产品迭代与效果优化",
+  "流量策略设计与业务优化",
+  "AI 工具与 Agent 提效",
+] as const;
+
 export const moduleItems = [
+  {
+    id: "experience",
+    label: "经历",
+    description: "从项目管理、产品运营到 AI 产品实践的工作经历。",
+  },
   ...projectModuleItems,
   {
     id: "other",
@@ -450,6 +486,7 @@ export function getProjectCategoryLabel(categoryId: ProjectCategoryId) {
 
 export function getVisibleModuleItems(content: SiteContent) {
   return moduleItems.filter((item) => {
+    if (item.id === "experience") return true;
     if (item.id === "other") return content.otherLinks.length > 0;
     if (item.id === "writing") return content.shares.length > 0;
     if (item.id === "contact") return true;
