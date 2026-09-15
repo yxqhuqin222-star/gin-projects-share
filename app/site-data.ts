@@ -114,6 +114,13 @@ export type Share = {
   title: string;
   group: string;
   summary: string;
+  entries?: ShareEntry[];
+};
+
+export type ShareEntry = {
+  id: string;
+  content: string;
+  createdAt: string;
 };
 
 export type ContactLink = {
@@ -445,6 +452,7 @@ export const shares = [
     title: "AI 工作流笔记",
     group: "AI Workflow",
     summary: "记录我实际使用过的 agent、automation、Codex tooling 和个人生产流程。",
+    entries: [],
   },
   {
     title: "生活观察",
@@ -516,6 +524,7 @@ export function createDefaultSiteContent(): SiteContent {
     shares: shares.map((share, index) => ({
       ...share,
       id: `share-${index + 1}`,
+      entries: share.entries?.map((entry) => ({ ...entry })) ?? [],
     })),
     contactLinks: contactLinks.map((link, index) => ({
       ...link,

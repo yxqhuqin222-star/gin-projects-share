@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { projectCategories, type ContactLink, type ManagedProject, type OtherLink, type Share, type SiteContent } from "../site-data";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { projectCategories, type ContactLink, type ManagedProject, type OtherLink, type Share, type ShareEntry, type SiteContent } from "../site-data";
 
 type Section = "projects" | "shares" | "others" | "contacts";
 const emptyContent: SiteContent = { projects: [], shares: [], otherLinks: [], contactLinks: [] };
@@ -22,12 +22,12 @@ function move<T>(items: T[], index: number, direction: -1 | 1) {
   return next;
 }
 
-export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated: boolean }) {
+export function AdminClient({ initiallyAuthenticated, initialShareId }: { initiallyAuthenticated: boolean; initialShareId?: string; initialEntryId?: string }) {
   const [authenticated, setAuthenticated] = useState(initiallyAuthenticated);
   const [password, setPassword] = useState("");
   const [content, setContent] = useState<SiteContent>(emptyContent);
   const [version, setVersion] = useState<number | null>(null);
-  const [section, setSection] = useState<Section>("projects");
+  const [section, setSection] = useState<Section>(initialShareId ? "shares" : "projects");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(initiallyAuthenticated);
   const [saving, setSaving] = useState(false);
@@ -42,21 +42,27 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
     return content.contactLinks[selectedIndex];
   }, [content, section, selectedIndex]);
 
-  async function loadContent() {
+  const loadContent = useCallback(async () => {
     setLoading(true); setIssues([]);
     const response = await fetch("/api/admin/content", { credentials: "same-origin" });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       setIssues([payload.error ?? "无法读取站点内容。"]);
       if (response.status === 401) setAuthenticated(false);
-    } else { setContent(payload.content); setVersion(payload.version); setDirty(false); }
+    } else {
+      setContent(payload.content); setVersion(payload.version); setDirty(false);
+      if (initialShareId) {
+        const shareIndex = payload.content.shares.findIndex((item: Share) => item.id === initialShareId);
+        if (shareIndex >= 0) { setSection("shares"); setSelectedIndex(shareIndex); }
+      }
+    }
     setLoading(false);
-  }
+  }, [initialShareId]);
 
   useEffect(() => {
     if (!authenticated) return;
     void Promise.resolve().then(loadContent);
-  }, [authenticated]);
+  }, [authenticated, loadContent]);
 
   async function login(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setNotice(""); setIssues([]);
@@ -73,15 +79,21 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
 
   async function save() {
     setSaving(true); setNotice(""); setIssues([]);
-    const response = await fetch("/api/admin/content", { method: "PUT", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ content, expectedVersion: version }) });
-    const payload = await response.json().catch(() => ({}));
-    setSaving(false);
-    if (!response.ok) {
-      setIssues(payload.issues ?? [payload.error ?? "保存失败。"]);
-      if (response.status === 401) setAuthenticated(false);
-      return;
+    try {
+      const response = await fetch("/api/admin/content", { method: "PUT", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ content, expectedVersion: version }) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setIssues(payload.issues ?? [payload.error ?? "保存失败。"]);
+        if (response.status === 401) setAuthenticated(false);
+        return;
+      }
+      setContent(payload.content); setVersion(payload.version); setDirty(false); setNotice("已保存，公开页面已使用新内容。");
+    } catch (error) {
+      console.error("Failed to save admin content", error);
+      setIssues(["保存请求失败，请检查本地服务后重试。"]);
+    } finally {
+      setSaving(false);
     }
-    setContent(payload.content); setVersion(payload.version); setDirty(false); setNotice("已保存，公开页面已使用新内容。");
   }
 
   function updateProject(patch: Partial<ManagedProject>) {
@@ -89,6 +101,36 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
   }
   function updateShare(patch: Partial<Share>) {
     setContent((current) => ({ ...current, shares: current.shares.map((item, index) => index === selectedIndex ? { ...item, ...patch } : item) })); setDirty(true);
+  }
+  function updateShareEntry(entryIndex: number, patch: Partial<ShareEntry>) {
+    setContent((current) => ({
+      ...current,
+      shares: current.shares.map((item, index) => index !== selectedIndex ? item : {
+        ...item,
+        entries: (item.entries ?? []).map((entry, index) => index === entryIndex ? { ...entry, ...patch } : entry),
+      }),
+    }));
+    setDirty(true);
+  }
+  function addShareEntry() {
+    setContent((current) => ({
+      ...current,
+      shares: current.shares.map((item, index) => index !== selectedIndex ? item : {
+        ...item,
+        entries: [...(item.entries ?? []), { id: localId("share-entry"), content: "请填写日志内容。", createdAt: new Date().toISOString() }],
+      }),
+    }));
+    setDirty(true);
+  }
+  function removeShareEntry(entryIndex: number) {
+    setContent((current) => ({
+      ...current,
+      shares: current.shares.map((item, index) => index !== selectedIndex ? item : {
+        ...item,
+        entries: (item.entries ?? []).filter((_, index) => index !== entryIndex),
+      }),
+    }));
+    setDirty(true);
   }
   function updateContact(patch: Partial<ContactLink>) {
     setContent((current) => ({ ...current, contactLinks: current.contactLinks.map((item, index) => index === selectedIndex ? { ...item, ...patch } : item) })); setDirty(true);
@@ -142,7 +184,7 @@ export function AdminClient({ initiallyAuthenticated }: { initiallyAuthenticated
     <div className="admin-studio-header"><div><p className="eyebrow">Private content studio</p><h1 id="admin-title">内容管理</h1></div><div className="admin-header-actions"><span>{dirty ? "有未保存改动" : "已同步"}</span><button type="button" className="text-button" onClick={logout}>退出登录</button></div></div>
     {loading ? <p className="admin-message">正在读取内容…</p> : <div className="admin-grid">
       <aside className="admin-list" aria-label="内容条目"><div className="admin-sections">{(["projects", "shares", "others", "contacts"] as Section[]).map((item) => <button key={item} type="button" className={section === item ? "active" : ""} onClick={() => { setSection(item); setSelectedIndex(0); }}>{item === "projects" ? "项目" : item === "shares" ? "分享" : item === "others" ? "其他" : "联系"}</button>)}</div><div className="admin-list-actions"><button type="button" onClick={addEntry}>新增</button><button type="button" disabled={selectedIndex === 0} onClick={() => reorder(-1)}>上移</button><button type="button" disabled={selectedIndex >= entries.length - 1} onClick={() => reorder(1)}>下移</button>{section !== "projects" ? <button type="button" className="danger" onClick={removeEntry}>删除</button> : null}</div><div className="admin-entry-list">{entries.map((entry, index) => <button type="button" key={entry.id} className={selectedIndex === index ? "active" : ""} onClick={() => setSelectedIndex(index)}>{entryName(entry)}</button>)}</div></aside>
-      <div className="admin-editor">{section === "projects" && selected ? <ProjectEditor project={selected as ManagedProject} onText={onText} updateProject={updateProject} /> : null}{section === "shares" && selected ? <ShareEditor share={selected as Share} onText={onText} /> : null}{section === "others" && selected ? <OtherLinkEditor link={selected as OtherLink} onText={onText} /> : null}{section === "contacts" && selected ? <ContactEditor contact={selected as ContactLink} onText={onText} /> : null}{!selected ? <p className="admin-empty">选择或新增一条内容开始编辑。</p> : null}</div>
+      <div className="admin-editor">{section === "projects" && selected ? <ProjectEditor project={selected as ManagedProject} onText={onText} updateProject={updateProject} /> : null}{section === "shares" && selected ? <ShareEditor share={selected as Share} onText={onText} updateShareEntry={updateShareEntry} addShareEntry={addShareEntry} removeShareEntry={removeShareEntry} /> : null}{section === "others" && selected ? <OtherLinkEditor link={selected as OtherLink} onText={onText} /> : null}{section === "contacts" && selected ? <ContactEditor contact={selected as ContactLink} onText={onText} /> : null}{!selected ? <p className="admin-empty">选择或新增一条内容开始编辑。</p> : null}</div>
       <aside className="admin-preview" aria-label="保存与预览"><p className="eyebrow">Publish check</p><h2>{dirty ? "改动尚未公开" : "内容已保存"}</h2><p>保存会一次性更新项目、分享、其他入口和联系方式。字段有误时不会写入数据库。</p>{section === "projects" && selected && "slug" in selected ? <a href={`/product/${selected.slug}`} target="_blank" rel="noreferrer">打开项目公开页 ↗</a> : <a href="/" target="_blank" rel="noreferrer">打开首页 ↗</a>}<button type="button" className="button primary" disabled={!dirty || saving} onClick={save}>{saving ? "保存中…" : "保存并发布"}</button>{notice ? <p className="admin-message success">{notice}</p> : null}{issues.length ? <ul className="admin-message error">{issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : null}</aside>
     </div>}
   </section>;
@@ -166,8 +208,9 @@ function ProjectEditor({ project, onText, updateProject }: { project: ManagedPro
   return <><div className="admin-editor-heading"><div><p className="eyebrow">Project</p><h2>{project.title}</h2></div><label className="admin-toggle"><input type="checkbox" checked={project.isPublished} onChange={(event) => updateProject({ isPublished: event.target.checked })} />公开显示</label></div><div className="admin-fields two-columns"><Field label="标题"><input value={project.title} onChange={onText("title")} /></Field><Field label="slug"><input value={project.slug} onChange={onText("slug")} /></Field><Field label="分类"><select value={project.categoryId} onChange={(event) => updateProject({ categoryId: event.target.value as ManagedProject["categoryId"] })}>{projectCategories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}</select></Field><Field label="状态"><input value={project.status} onChange={onText("status")} /></Field><Field label="卡片标签"><input value={project.monogram} onChange={onText("monogram")} /></Field><Field label="GitHub 链接"><input value={project.githubUrl} onChange={onText("githubUrl")} /></Field><Field label="线上链接（可选）"><input value={project.liveUrl ?? ""} onChange={onText("liveUrl")} /></Field><Field label="封面图 URL（可选）"><input value={project.image ?? ""} onChange={onText("image")} /></Field></div><div className="admin-fields"><Field label="项目摘要"><textarea value={project.summary} onChange={onText("summary")} /></Field><Field label="详情介绍"><textarea value={project.intro} onChange={onText("intro")} /></Field><WorkflowEditor project={project} updateProject={updateProject} /><Field label="正文段落（每行一段）"><textarea value={project.paragraphs.join("\n")} onChange={(event) => updateProject({ paragraphs: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean) })} /></Field><Field label="图库 URL（每行一个，可使用 /projects/...）"><textarea value={(project.galleryImages ?? []).join("\n")} onChange={(event) => updateProject({ galleryImages: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean) })} /></Field><Field label="图片说明（与图库逐行对应，可留空）"><textarea value={(project.galleryCaptions ?? []).join("\n")} onChange={(event) => updateProject({ galleryCaptions: event.target.value.split("\n") })} /></Field><Field label="证据备注（仅后台）"><textarea value={project.sourceNote ?? ""} onChange={onText("sourceNote")} /></Field></div></>;
 }
 
-function ShareEditor({ share, onText }: { share: Share; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {
-  return <><div className="admin-editor-heading"><div><p className="eyebrow">Share</p><h2>{share.title}</h2></div></div><div className="admin-fields"><Field label="标题"><input value={share.title} onChange={onText("title")} /></Field><Field label="分组"><input value={share.group} onChange={onText("group")} /></Field><Field label="摘要"><textarea value={share.summary} onChange={onText("summary")} /></Field></div></>;
+function ShareEditor({ share, onText, updateShareEntry, addShareEntry, removeShareEntry }: { share: Share; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; updateShareEntry: (entryIndex: number, patch: Partial<ShareEntry>) => void; addShareEntry: () => void; removeShareEntry: (entryIndex: number) => void }) {
+  const entries = share.entries ?? [];
+  return <><div className="admin-editor-heading"><div><p className="eyebrow">Share module</p><h2>{share.title}</h2></div><button type="button" className="button secondary" onClick={addShareEntry}>新增模块内容</button></div><div className="admin-fields"><Field label="模块标题"><input value={share.title} onChange={onText("title")} /></Field><Field label="分组"><input value={share.group} onChange={onText("group")} /></Field><Field label="模块说明"><textarea value={share.summary} onChange={onText("summary")} /></Field></div><div className="admin-share-entries"><div className="admin-subheading"><div><p className="eyebrow">Entries</p><h3>模块内容</h3></div><span>{entries.length} 条</span></div>{entries.length ? entries.map((entry, index) => <fieldset className="admin-share-entry" key={entry.id}><legend>记录 {index + 1}</legend><button type="button" className="text-button danger-text" onClick={() => removeShareEntry(index)}>删除</button><div className="admin-fields"><Field label="内容"><textarea rows={8} value={entry.content} onChange={(event) => updateShareEntry(index, { content: event.target.value })} /></Field><Field label="添加时间"><input value={entry.createdAt === "1970-01-01T00:00:00.000Z" ? "时间未记录" : entry.createdAt} readOnly /></Field></div></fieldset>) : <p className="admin-empty">还没有模块内容，点击“新增模块内容”开始记录。</p>}</div></>;
 }
 
 function OtherLinkEditor({ link, onText }: { link: OtherLink; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {

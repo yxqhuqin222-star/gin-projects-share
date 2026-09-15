@@ -2,8 +2,9 @@ import Link from "next/link";
 import { isCurrentAdminAuthenticated } from "../admin-auth";
 import { AdminClient } from "./admin-client";
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ share?: string; entry?: string }> }) {
   const authenticated = await isCurrentAdminAuthenticated();
+  const params = await searchParams;
 
   return (
     <main>
@@ -16,7 +17,7 @@ export default async function AdminPage() {
             返回公开站
           </Link>
         </header>
-        <AdminClient initiallyAuthenticated={authenticated} />
+        <AdminClient initiallyAuthenticated={authenticated} initialShareId={params.share} initialEntryId={params.entry} />
       </div>
     </main>
   );

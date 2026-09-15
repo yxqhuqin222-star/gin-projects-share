@@ -99,17 +99,19 @@ export async function verifyAdminPassword(password: string) {
   return { ok: await sameSecret(password, config.password), configured: true };
 }
 
-export async function createAdminSessionCookie() {
+export async function createAdminSessionCookie(request: Request) {
   const config = await getAdminConfig();
   if (!config) throw new Error("Admin login is not configured");
   const payload: SessionPayload = { scope: "admin", exp: Date.now() + SESSION_DURATION_MS };
   const encodedPayload = base64Url(encoder.encode(JSON.stringify(payload)));
   const signature = await sign(encodedPayload, config.sessionSecret);
-  return `${SESSION_COOKIE}=${encodedPayload}.${signature}; Path=/; Max-Age=${SESSION_DURATION_MS / 1000}; HttpOnly; Secure; SameSite=Strict`;
+  const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
+  return `${SESSION_COOKIE}=${encodedPayload}.${signature}; Path=/; Max-Age=${SESSION_DURATION_MS / 1000}; HttpOnly${secure}; SameSite=Strict`;
 }
 
-export function clearAdminSessionCookie() {
-  return `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
+export function clearAdminSessionCookie(request: Request) {
+  const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
+  return `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly${secure}; SameSite=Strict`;
 }
 
 export function adminCookieFromRequest(request: Request) {

@@ -3599,7 +3599,16 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.56);
+  color: inherit;
   padding: 18px;
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.writing-card:hover,
+.writing-card:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-2px);
 }
 
 .writing-card span,
@@ -3620,6 +3629,205 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.68;
+}
+
+.writing-card-action {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.admin-share-entries {
+  border-top: 1px solid var(--line);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.admin-subheading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+}
+
+.admin-subheading h3 {
+  margin: 0.25rem 0 1rem;
+}
+
+.admin-share-entry {
+  border: 1px solid var(--line);
+  margin: 1rem 0;
+  padding: 1rem;
+  position: relative;
+}
+
+.admin-share-entry legend {
+  padding: 0 0.4rem;
+}
+
+.admin-share-entry input[readonly] {
+  color: var(--muted);
+}
+
+.admin-share-entry > button {
+  position: absolute;
+  right: 1rem;
+  top: 0.7rem;
+}
+
+.share-page {
+  max-width: 980px;
+  padding-bottom: 96px;
+  padding-top: 30px;
+}
+
+.share-page-topbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 54px;
+}
+
+.back-link,
+.share-home-link {
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.back-link:hover,
+.share-home-link:hover { color: var(--fg); }
+
+.share-home-link {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--fg);
+  padding: 9px 16px;
+}
+
+.share-page-header {
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+.share-page-header h1 {
+  font-size: clamp(34px, 5vw, 54px);
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.share-entry-count {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.share-entry-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.share-entry-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px 24px;
+  position: relative;
+}
+
+.share-entry-card:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+
+.share-entry-card time {
+  color: var(--muted);
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  margin-bottom: 18px;
+}
+
+.share-entry-card p {
+  font-size: 20px;
+  line-height: 1.75;
+  margin: 0;
+  max-width: 820px;
+  white-space: pre-wrap;
+}
+
+.share-entry-tag {
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  border-radius: 7px;
+  color: var(--accent);
+  display: inline-block;
+  font-size: 14px;
+  margin-top: 18px;
+  padding: 5px 9px;
+}
+
+.share-entry-more {
+  background: transparent;
+  border: 0;
+  color: var(--dim);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 0 4px 14px;
+  position: absolute;
+  right: 20px;
+  top: 18px;
+}
+
+.share-entry-more:hover { color: var(--fg); }
+
+.share-entry-more:disabled { cursor: wait; opacity: 0.5; }
+
+.share-entry-menu {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(24, 33, 49, 0.12);
+  display: grid;
+  min-width: 112px;
+  padding: 5px;
+  position: absolute;
+  right: 18px;
+  top: 51px;
+  z-index: 2;
+}
+
+.share-entry-menu a,
+.share-entry-menu button {
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 12px;
+  text-align: left;
+  text-decoration: none;
+}
+
+.share-entry-menu a:hover,
+.share-entry-menu button:hover { background: color-mix(in srgb, var(--line) 45%, transparent); }
+
+.share-entry-menu button { color: #c43d3d; }
+
+.share-empty {
+  color: var(--muted);
+  padding: 28px 0;
+}
+
+@media (max-width: 650px) {
+  .share-page { padding-top: 22px; }
+  .share-page-topbar { margin-bottom: 42px; }
+  .share-page-header { align-items: start; display: block; }
+  .share-entry-count { display: block; margin-top: 14px; }
+  .share-entry-card { padding: 18px 18px 20px; }
+  .share-entry-card p { font-size: 17px; }
 }
 
 .other-link-list {

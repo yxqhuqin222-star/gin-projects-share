@@ -218,11 +218,12 @@ export default async function Home() {
 
           <div className="writing-list">
             {content.shares.map((share) => (
-              <article className="writing-card" key={share.id}>
+              <Link className="writing-card" href={`/share/${share.id}`} key={share.id}>
                 <span>{share.group}</span>
                 <h3>{share.title}</h3>
                 <p>{share.summary}</p>
-              </article>
+                <small className="writing-card-action">查看记录{share.entries?.length ? ` · ${share.entries.length} 条` : ""} →</small>
+              </Link>
             ))}
           </div>
         </section>

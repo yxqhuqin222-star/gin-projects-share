@@ -177,6 +177,7 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /skills及工具/);
   assert.match(html, /个人提效/);
   assert.match(html, /分享/);
+  assert.match(html, /href="\/share\/share-2"/);
   assert.match(html, /联系/);
   assert.match(html, /DialKit 界面调参/);
   assert.match(html, /xhs-photo-downloader/);
@@ -202,6 +203,15 @@ test("server-renders the Gin homepage", async () => {
   assert.doesNotMatch(html, /Stack \/ Type|Live site|Selected work|More projects/);
   assert.match(html, /咨询/);
   assert.doesNotMatch(html, /人工智能|代码仓库/);
+});
+
+test("share modules render an independent chronological detail page", async () => {
+  const response = await render("/share/share-2");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /AI 工作流笔记/);
+  assert.match(html, /还没有记录/);
+  assert.doesNotMatch(html, /一句话摘要|正文/);
 });
 
 test("consultation api rejects an unconfigured relay without fake success", async () => {
@@ -586,8 +596,20 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     });
     assert.equal(login.status, 200);
     const cookie = login.headers.get("set-cookie").split(";")[0];
-    assert.match(login.headers.get("set-cookie"), /HttpOnly; Secure; SameSite=Strict/);
+    assert.match(login.headers.get("set-cookie"), /HttpOnly; SameSite=Strict/);
+    assert.doesNotMatch(login.headers.get("set-cookie"), /; Secure(?:;|$)/);
     assert.match(login.headers.get("set-cookie"), /Max-Age=43200/);
+
+    const productionLogin = await worker.fetch(
+      new Request("https://localhost/api/admin/auth", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
+      }),
+      environment,
+      context,
+    );
+    assert.match(productionLogin.headers.get("set-cookie"), /HttpOnly; Secure; SameSite=Strict/);
 
     const initialResponse = await request("/api/admin/content", { headers: { cookie } });
     assert.equal(initialResponse.status, 200);
@@ -605,6 +627,12 @@ test("admin content management protects, validates, saves, and publishes D1 cont
       title: "其他入口测试",
       summary: "不使用图片的轻量入口。",
       href: "https://example.com/other-test",
+    });
+    const share = content.shares.find((item) => item.id === "share-2");
+    share.entries.push({
+      id: "share-entry-test",
+      content: "独立页面记录测试。",
+      createdAt: "2026-09-14T08:12:00+08:00",
     });
 
     const unsafeContent = structuredClone(content);
@@ -645,10 +673,15 @@ test("admin content management protects, validates, saves, and publishes D1 cont
     assert.deepEqual(savedSample.paragraphs, legacyParagraphs);
     assert.deepEqual(readBack.content.projects[0].workflow, content.projects[0].workflow);
     assert.deepEqual(readBack.content.projects[0].galleryCaptions, ["工具广场界面"]);
+    assert.deepEqual(readBack.content.shares.find((item) => item.id === "share-2").entries, share.entries);
     const samplePage = await request(`/product/${xhs.slug}`);
     const sampleHtml = await samplePage.text();
     assert.match(sampleHtml, /本地编辑后的使用说明/);
     assert.doesNotMatch(sampleHtml.match(/<main\b[\s\S]*?<\/main>/)?.[0] ?? "", /README 明确/);
+    const sharePage = await request("/share/share-2");
+    const shareHtml = await sharePage.text();
+    assert.match(shareHtml, /独立页面记录测试/);
+    assert.match(shareHtml, /2026-09-14 08:12/);
 
     const staleSave = await request("/api/admin/content", {
       method: "PUT",

@@ -6,6 +6,7 @@ import {
   type ProjectWorkflow,
   projectCategories,
   type Share,
+  type ShareEntry,
   type SiteContent,
 } from "./site-data";
 
@@ -17,6 +18,7 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,79}$/;
 const PROJECT_SLUG_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/;
 const MAX_PROJECTS = 100;
 const MAX_SHARES = 100;
+const MAX_SHARE_ENTRIES = 100;
 const MAX_CONTACTS = 30;
 const MAX_OTHER_LINKS = 100;
 const categoryIds = new Set<string>(projectCategories.map((item) => item.id));
@@ -153,11 +155,40 @@ function validateShare(value: unknown, index: number, issues: string[]): Share |
   const input = value as Record<string, unknown>;
   const id = text(input.id, `分享 ${index + 1} ID`, issues, { max: 80 });
   if (id && !ID_PATTERN.test(id)) issues.push(`分享 ${index + 1} ID格式无效。`);
+  const entries = array(input.entries ?? [], `分享 ${index + 1}条目`, issues, MAX_SHARE_ENTRIES)
+    .map((entry, entryIndex) => validateShareEntry(entry, index, entryIndex, issues))
+    .filter((entry): entry is ShareEntry => Boolean(entry));
+  duplicateIssues(entries.map((entry) => entry.id), `分享 ${index + 1}条目 ID`, issues);
   return {
     id,
     title: text(input.title, `分享 ${index + 1}标题`, issues, { max: 140 }),
     group: text(input.group, `分享 ${index + 1}分组`, issues, { max: 80 }),
     summary: text(input.summary, `分享 ${index + 1}摘要`, issues, { max: 800 }),
+    entries,
+  };
+}
+
+function validateShareEntry(value: unknown, shareIndex: number, entryIndex: number, issues: string[]): ShareEntry | null {
+  if (!value || typeof value !== "object") {
+    issues.push(`分享 ${shareIndex + 1}第${entryIndex + 1}条内容格式不正确。`);
+    return null;
+  }
+  const input = value as Record<string, unknown>;
+  const prefix = `分享 ${shareIndex + 1}条目 ${entryIndex + 1}`;
+  const id = text(input.id, `${prefix} ID`, issues, { max: 80 });
+  if (id && !ID_PATTERN.test(id)) issues.push(`${prefix} ID格式无效。`);
+  const epoch = "1970-01-01T00:00:00.000Z";
+  const legacyContent = typeof input.body === "string" ? input.body
+    : typeof input.summary === "string" ? input.summary
+      : typeof input.title === "string" ? input.title : "";
+  const createdAt = text(input.createdAt, `${prefix}添加时间`, issues, { required: false, max: 40 }) || epoch;
+  if (createdAt !== epoch && !Number.isFinite(Date.parse(createdAt))) {
+    issues.push(`${prefix}添加时间格式无效。`);
+  }
+  return {
+    id,
+    content: text(input.content ?? legacyContent, `${prefix}内容`, issues, { max: 12000 }),
+    createdAt,
   };
 }
 

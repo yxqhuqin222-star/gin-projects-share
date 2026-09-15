@@ -55,17 +55,17 @@ export async function POST(request: Request) {
     headers: {
       "content-type": "application/json",
       ...privateHeaders,
-      "set-cookie": await createAdminSessionCookie(),
+      "set-cookie": await createAdminSessionCookie(request),
     },
   });
 }
 
-export function DELETE() {
+export function DELETE(request: Request) {
   return new Response(JSON.stringify({ ok: true }), {
     headers: {
       "content-type": "application/json",
       ...privateHeaders,
-      "set-cookie": clearAdminSessionCookie(),
+    "set-cookie": clearAdminSessionCookie(request),
     },
   });
 }
