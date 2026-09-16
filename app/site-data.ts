@@ -55,14 +55,14 @@ export const moduleItems = [
   },
   ...projectModuleItems,
   {
-    id: "other",
-    label: "其他",
-    description: "不需要图片或详情页的轻量入口。",
-  },
-  {
     id: "writing",
     label: "分享",
     description: "读书、AI 工作流、生活观察和工具清单。",
+  },
+  {
+    id: "other",
+    label: "其他",
+    description: "不需要图片或详情页的轻量入口。",
   },
   {
     id: "contact",

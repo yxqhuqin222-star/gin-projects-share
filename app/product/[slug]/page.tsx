@@ -69,9 +69,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </nav>
         </header>
 
-        <Link className="back-link" href={`/#${project.categoryId}`}>
+        <a className="back-link" href={`/#project-${project.slug}`}>
           返回{categoryLabel}
-        </Link>
+        </a>
 
         <header className={`detail-hero${project.workflow ? ` ${styles.conciseHero}` : ""}`}>
           {project.status ? <p>{project.status}</p> : null}
@@ -116,7 +116,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </article> : null}
 
       <section className="detail-bottom">
-        <Link href={`/#${project.categoryId}`}>返回列表</Link>
+        <a href={`/#project-${project.slug}`}>返回列表</a>
         {!project.workflow ? <a href={project.githubUrl} target="_blank" rel="noreferrer">
           仓库主页
         </a> : null}

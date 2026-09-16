@@ -179,6 +179,18 @@ test("server-renders the Gin homepage", async () => {
   assert.match(html, /分享/);
   assert.match(html, /href="\/share\/share-2"/);
   assert.match(html, /联系/);
+  const navHtml = html.match(/<nav>([\s\S]*?)<\/nav>/)?.[1] ?? "";
+  const navOrder = [...navHtml.matchAll(/<a[^>]*href="#([^\"]+)"[^>]*>/g)]
+    .map(([, id]) => id)
+    .filter((id) => ["experience", "work", "skills-tools", "personal-efficiency", "writing", "other", "contact"].includes(id));
+  assert.deepEqual(navOrder, [
+    "experience",
+    "work",
+    "skills-tools",
+    "personal-efficiency",
+    "writing",
+    "contact",
+  ]);
   assert.match(html, /DialKit 界面调参/);
   assert.match(html, /xhs-photo-downloader/);
   assert.match(html, /xiaoming-feishu-bot/);
@@ -495,6 +507,7 @@ test("server-renders project detail pages with professional labels", async () =>
   assert.match(html, /计算成本与转化/);
   assert.match(html, /查看代码与使用指南/);
   assert.match(html, /打开页面/);
+  assert.match(html, /href="\/#project-renxiao"[^>]*>返回列表</);
   assert.doesNotMatch(html, /来源/);
   assert.doesNotMatch(html, /GitHub README 和本地项目截图/);
   assert.doesNotMatch(html, /CASE STUDY|Overview|Stack \/ Type|Links|Back to Projects/);
