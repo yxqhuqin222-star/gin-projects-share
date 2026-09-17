@@ -10,6 +10,22 @@ function localId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function formatBeijingDateTime(value: string) {
+  if (value === "1970-01-01T00:00:00.000Z") return "时间未记录";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "时间未记录";
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).format(date).replace(", ", " ");
+}
+
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label className="admin-field"><span>{label}</span>{children}</label>;
 }
@@ -117,7 +133,7 @@ export function AdminClient({ initiallyAuthenticated, initialShareId }: { initia
       ...current,
       shares: current.shares.map((item, index) => index !== selectedIndex ? item : {
         ...item,
-        entries: [...(item.entries ?? []), { id: localId("share-entry"), content: "请填写日志内容。", createdAt: new Date().toISOString() }],
+        entries: [...(item.entries ?? []), { id: localId("share-entry"), content: "", createdAt: new Date().toISOString() }],
       }),
     }));
     setDirty(true);
@@ -217,7 +233,7 @@ function ProjectEditor({ project, onText, updateProject, removeProject }: { proj
 
 function ShareEditor({ share, onText, updateShareEntry, addShareEntry, removeShareEntry }: { share: Share; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; updateShareEntry: (entryIndex: number, patch: Partial<ShareEntry>) => void; addShareEntry: () => void; removeShareEntry: (entryIndex: number) => void }) {
   const entries = share.entries ?? [];
-  return <><div className="admin-editor-heading"><div><p className="eyebrow">Share module</p><h2>{share.title}</h2></div><button type="button" className="button secondary" onClick={addShareEntry}>新增模块内容</button></div><div className="admin-fields"><Field label="模块标题"><input value={share.title} onChange={onText("title")} /></Field><Field label="分组"><input value={share.group} onChange={onText("group")} /></Field><Field label="模块说明"><textarea value={share.summary} onChange={onText("summary")} /></Field></div><div className="admin-share-entries"><div className="admin-subheading"><div><p className="eyebrow">Entries</p><h3>模块内容</h3></div><span>{entries.length} 条</span></div>{entries.length ? entries.map((entry, index) => <fieldset className="admin-share-entry" key={entry.id}><legend>记录 {index + 1}</legend><button type="button" className="text-button danger-text" onClick={() => removeShareEntry(index)}>删除</button><div className="admin-fields"><Field label="内容"><textarea rows={8} value={entry.content} onChange={(event) => updateShareEntry(index, { content: event.target.value })} /></Field><Field label="添加时间"><input value={entry.createdAt === "1970-01-01T00:00:00.000Z" ? "时间未记录" : entry.createdAt} readOnly /></Field></div></fieldset>) : <p className="admin-empty">还没有模块内容，点击“新增模块内容”开始记录。</p>}</div></>;
+  return <><div className="admin-editor-heading"><div><p className="eyebrow">Share module</p><h2>{share.title}</h2></div><button type="button" className="button secondary" onClick={addShareEntry}>新增模块内容</button></div><div className="admin-fields"><Field label="模块标题"><input value={share.title} onChange={onText("title")} /></Field><Field label="分组"><input value={share.group} onChange={onText("group")} /></Field><Field label="模块说明"><textarea value={share.summary} onChange={onText("summary")} /></Field></div><div className="admin-share-entries"><div className="admin-subheading"><div><p className="eyebrow">Entries</p><h3>模块内容</h3></div><span>{entries.length} 条</span></div>{entries.length ? entries.map((entry, index) => <fieldset className="admin-share-entry" key={entry.id}><legend>记录 {index + 1}</legend><button type="button" className="text-button danger-text" onClick={() => removeShareEntry(index)}>删除</button><div className="admin-fields"><Field label="内容"><textarea rows={8} value={entry.content} placeholder="请输入日志内容" onChange={(event) => updateShareEntry(index, { content: event.target.value })} /></Field><Field label="添加时间（北京时间）"><input value={formatBeijingDateTime(entry.createdAt)} readOnly /></Field></div></fieldset>) : <p className="admin-empty">还没有模块内容，点击“新增模块内容”开始记录。</p>}</div></>;
 }
 
 function OtherLinkEditor({ link, onText }: { link: OtherLink; onText: (key: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {

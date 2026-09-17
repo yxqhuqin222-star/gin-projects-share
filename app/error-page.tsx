@@ -37,12 +37,13 @@ export function ErrorShell({ children }: { children: ReactNode }) {
   return (
     <main className="error-page-shell">
       <header className="error-topbar" aria-label="错误页导航">
-        <Link className="error-nav-button" href="/">
-          ‹‹ 返回首页
-        </Link>
-        <Link className="error-nav-button" href="/#selected">
-          项目档案 »
-        </Link>
+        <Link className="error-brand" href="/">Gin</Link>
+        <nav className="error-site-links" aria-label="站内导航">
+          <Link href="/#selected">项目</Link>
+          <Link href="/#writing">记录</Link>
+          <Link href="/#contact">联系</Link>
+        </nav>
+        <Link className="error-nav-button" href="/">返回首页 ↗</Link>
       </header>
       {children}
     </main>
@@ -92,7 +93,7 @@ export function ErrorPage({
       >
         <div className="error-copy">
           <p className="error-sheet-label">
-            SHEET {code ?? defaults.code} · GIN ARCHIVE · UNFILED ROUTE
+            GIN ROUTE / {code ?? defaults.code}
           </p>
           <h1
             className="error-code"
@@ -107,35 +108,24 @@ export function ErrorPage({
             <ActionLink action={resolvedPrimaryAction} />
             {resolvedSecondaryAction ? <ActionLink action={resolvedSecondaryAction} /> : null}
           </div>
-          <p className="error-hint">› 这张页面没有归档，先沿着公开项目索引返回。</p>
+          <p className="error-hint">从项目、记录或联系入口，继续浏览 Gin。</p>
         </div>
 
         <div className="error-archive" aria-hidden="true" style={codeStyle}>
           <div className="error-archive-index">
-            <span>after the public work index</span>
-            <span>gin archive</span>
+            <span>route interrupted</span>
+            <span>gin index</span>
           </div>
           <svg className="error-trace" viewBox="0 0 520 360" role="presentation">
-            <path className="trace-dark" d="M62 326 C92 260 116 208 148 160 C186 104 236 74 310 76" />
-            <path className="trace-dark" d="M155 162 C128 130 94 122 70 144 C44 169 48 214 82 232 C116 250 154 228 166 190" />
-            <path className="trace-dark" d="M86 154 C105 176 125 201 144 224" />
-            <path className="trace-dark" d="M100 194 C127 182 153 183 178 199" />
-            <path className="trace-dark" d="M224 108 C210 76 218 48 242 36 C268 23 296 37 306 66 C316 96 294 122 264 124" />
-            <path className="trace-dark" d="M244 48 C260 70 278 92 300 114" />
-            <path className="trace-dark" d="M252 88 C272 76 292 73 312 78" />
-            <path className="trace-dark" d="M306 78 C342 80 374 95 402 124 C432 156 462 170 492 166" />
-            <path className="trace-dark" d="M198 288 C224 236 260 207 306 204 C344 202 368 226 360 256 C352 288 312 302 278 282" />
-            <path className="trace-dark" d="M282 218 C306 236 330 254 356 270" />
-            <path className="trace-soft" d="M174 324 C210 278 240 248 280 234 C328 218 376 238 438 286" />
-            <path className="trace-soft" d="M312 184 L366 134 L496 184" />
-            <path className="trace-soft" d="M262 176 C294 196 326 200 360 188" />
-            <path className="trace-soft" d="M338 104 C354 96 371 96 388 106" />
+            <path className="trace-dark" d="M42 290 C106 288 96 122 190 118 S312 208 384 174 S446 92 500 116" />
+            <path className="trace-soft" d="M18 84 C100 72 150 202 242 220 S356 156 436 258" />
+            <path className="trace-soft" d="M90 320 C126 276 174 254 240 268 S344 322 424 304" />
           </svg>
           <span className="error-node node-one" />
           <span className="error-node node-two" />
           <span className="error-node node-three" />
           <div className="error-vellum">
-            <span>vellum · loose</span>
+            <span>find the next route</span>
             <strong>{code ?? defaults.code}</strong>
           </div>
         </div>
