@@ -1,21 +1,37 @@
+/* Hallmark · pre-emit critique: P5 H4 E4 S5 R4 V4 */
 @import "tailwindcss";
 
+/* Hallmark · macrostructure: Workbench (preserved) · route: custom (tuned)
+ * theme: custom · vibe: "late-night, mature, amber signal" · paper: oklch(0.16 0.024 255) · accent: oklch(0.77 0.16 78)
+ * display: system native · body: system native · axes: dark / system-native / chromatic-amber ~78deg
+ * studied: no · context: explicit · contrast: pass (40-41)
+ */
 :root {
-  --bg: #f7f7f4;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: #ffffff;
-  --surface-muted: rgba(255, 255, 255, 0.58);
-  --fg: #1d1d1f;
-  --soft: #424245;
-  --muted: #6e6e73;
-  --dim: #86868b;
-  --line: rgba(0, 0, 0, 0.1);
-  --line-strong: rgba(0, 0, 0, 0.16);
-  --blue: #0066cc;
-  --blue-soft: rgba(0, 102, 204, 0.1);
-  --green: #1d7f57;
-  --shadow-card: 0 22px 64px rgba(0, 0, 0, 0.08);
-  --shadow-soft: 0 12px 38px rgba(0, 0, 0, 0.06);
+  --bg: oklch(0.16 0.024 255);
+  --surface: oklch(0.21 0.03 255 / 0.92);
+  --surface-strong: oklch(0.235 0.032 255);
+  --surface-muted: oklch(0.255 0.034 255 / 0.78);
+  --surface-inset: oklch(0.135 0.022 255);
+  --surface-hover: oklch(0.28 0.038 252);
+  --media-surface: oklch(0.96 0.012 80);
+  --fg: oklch(0.94 0.016 80);
+  --soft: oklch(0.82 0.02 80);
+  --muted: oklch(0.72 0.022 75);
+  --dim: oklch(0.63 0.022 72);
+  --line: oklch(0.36 0.032 250);
+  --line-strong: oklch(0.48 0.042 248);
+  --blue: oklch(0.77 0.16 78);
+  --blue-soft: oklch(0.29 0.06 75);
+  --focus: oklch(0.82 0.18 78);
+  --accent-ink: oklch(0.17 0.026 255);
+  --green: oklch(0.76 0.12 145);
+  --green-soft: oklch(0.25 0.045 145);
+  --danger: oklch(0.72 0.17 25);
+  --danger-soft: oklch(0.25 0.055 25);
+  --accent: var(--blue);
+  --panel: var(--surface);
+  --shadow-card: 0 22px 64px oklch(0.08 0.02 255 / 0.52);
+  --shadow-soft: 0 12px 38px oklch(0.08 0.02 255 / 0.4);
   --radius-xl: 34px;
   --radius-l: 28px;
   --radius-m: 20px;
@@ -73,7 +89,7 @@ textarea {
 a:focus-visible,
 button:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 
@@ -4350,4 +4366,358 @@ textarea:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .error-stage, .error-code, .error-archive, .error-trace, .error-vellum, .error-actions .button { animation: none; transition: none; transform: none; }
+}
+
+/* Night amber global theme layer. Existing page structures stay intact. */
+html {
+  color-scheme: dark;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--blue);
+  color: var(--accent-ink);
+}
+
+.site-header,
+.hero-panel,
+.direction-card,
+.product-card,
+.compact-card,
+.share-grid article,
+.consultation-trigger,
+.consultation-panel,
+.minimal-header,
+.workbench-rail,
+.workbench-hero,
+.module-section,
+.detail-hero,
+.detail-meta > div,
+.detail-summary div,
+.project-gallery figure,
+.admin-placeholder,
+.admin-login,
+.admin-list,
+.admin-editor,
+.admin-preview,
+.portfolio-rail,
+.rail-label,
+.experience-card,
+.writing-card,
+.admin-share-settings,
+.share-entry-card,
+.share-entry-menu,
+.contact-list a,
+.contact-wechat,
+.portfolio-mobile-header {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.hero-panel div,
+.category-tabs span,
+.project-summary span,
+.compact-monogram,
+.consultation-close,
+.consultation-message.operator,
+.consultation-form,
+.detail-actions a,
+.entry-card,
+.skill-list span,
+.work-card-visual,
+.work-card-flow,
+.writing-card-action,
+.share-entry-menu a:hover,
+.share-entry-menu button:hover,
+.admin-entry-list button.active,
+.admin-entry-list button:hover {
+  border-color: var(--line);
+  background: var(--surface-muted);
+  color: var(--soft);
+}
+
+.site-header,
+.minimal-header,
+.portfolio-rail,
+.portfolio-mobile-header,
+.consultation-trigger,
+.consultation-panel {
+  background: color-mix(in oklch, var(--surface) 88%, transparent);
+}
+
+.button.primary,
+.consultation-actions button,
+.rail-nav a:first-child,
+.rail-nav a:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.button.primary:hover,
+.consultation-actions button:hover:not(:disabled) {
+  background: var(--blue);
+  color: var(--accent-ink);
+}
+
+.button.secondary,
+.detail-bottom a,
+.mobile-module-nav a,
+.error-state button,
+.contact-actions button,
+.contact-actions a {
+  border-color: var(--line);
+  background: var(--surface-strong);
+  color: var(--blue);
+}
+
+.button.secondary:hover,
+.detail-bottom a:hover,
+.mobile-module-nav a:hover,
+.error-state button:hover,
+.contact-actions button:hover,
+.contact-actions a:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.hero-avatar,
+.consultation-message.visitor {
+  background: var(--blue);
+  color: var(--accent-ink);
+}
+
+.consultation-header p span,
+.consultation-trigger span,
+.project-status {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.consultation-close:hover,
+.experience-card:hover,
+.entry-card:hover,
+.writing-card:hover,
+.writing-card:focus-visible,
+.contact-list a:hover,
+.contact-list a:focus-visible,
+.work-card:hover,
+.work-card:focus-within,
+.admin-entry:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+}
+
+.consultation-form textarea,
+.admin-field input,
+.admin-field textarea,
+.admin-field select {
+  border-color: var(--line);
+  background: var(--surface-inset);
+  color: var(--fg);
+}
+
+.consultation-form textarea:focus,
+.admin-field input:focus,
+.admin-field textarea:focus,
+.admin-field select:focus {
+  border-color: var(--blue);
+  background: var(--surface-strong);
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.work-card {
+  background: var(--surface-strong);
+  box-shadow: inset 0 1px var(--line);
+}
+
+.work-card-visual img,
+.detail-gallery figure,
+.project-gallery img {
+  background: var(--media-surface);
+}
+
+.work-card-copy small,
+.work-card-copy p,
+.rail-home,
+.portfolio-rail nav a,
+.error-hint,
+.error-footer {
+  color: var(--muted);
+}
+
+.rail-home,
+.portfolio-rail nav a:hover,
+.portfolio-rail nav a:focus-visible,
+.portfolio-rail nav a.active {
+  border-color: var(--line);
+  background: var(--surface-strong);
+  color: var(--fg);
+}
+
+.other-link-list a:hover,
+.other-link-list a:focus-visible {
+  background: linear-gradient(90deg, transparent, var(--blue-soft));
+}
+
+.admin-list-actions .danger,
+.admin-message.error,
+.danger-text,
+.share-entry-menu button {
+  color: var(--danger);
+}
+
+.admin-message.success {
+  color: var(--green);
+}
+
+.admin-share-entry {
+  border-color: var(--line);
+  background: var(--surface-inset);
+}
+
+.share-entry-tag {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.share-entry-more {
+  color: var(--dim);
+}
+
+/* The bright error-page composition is retained, recolored into night amber. */
+.error-page-shell {
+  background:
+    radial-gradient(circle at 82% 8%, var(--blue-soft), transparent 36%),
+    var(--bg);
+  color: var(--fg);
+}
+
+.error-brand,
+.error-site-links a,
+.error-copy h2,
+.error-copy > p:not(.error-sheet-label):not(.error-hint) {
+  color: var(--fg);
+}
+
+.error-sheet-label {
+  color: var(--blue) !important;
+}
+
+.error-site-links a::after {
+  background: var(--blue);
+}
+
+.error-nav-button {
+  border-color: var(--line-strong);
+  background: var(--blue);
+  color: var(--accent-ink);
+}
+
+.error-nav-button:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.error-code {
+  color: var(--blue);
+  text-shadow: 9px 9px 0 var(--surface-strong), 18px 18px 0 var(--line-strong);
+}
+
+.error-actions .button {
+  border-color: var(--line-strong);
+  color: var(--fg);
+}
+
+.error-actions .button.primary,
+.error-actions .button.primary:hover {
+  background: var(--blue);
+  color: var(--accent-ink);
+  box-shadow: 5px 5px 0 var(--surface-strong);
+}
+
+.error-actions .button.secondary,
+.error-actions .button.secondary:hover {
+  background: var(--surface-strong);
+  color: var(--fg);
+  box-shadow: 5px 5px 0 var(--line-strong);
+}
+
+.error-hint,
+.error-footer,
+.error-archive-index {
+  color: var(--muted) !important;
+}
+
+.error-archive::before,
+.error-archive::after,
+.error-vellum {
+  border-color: var(--line-strong);
+  box-shadow: 10px 10px 0 var(--surface-inset);
+}
+
+.error-archive::before {
+  background: var(--surface-hover);
+}
+
+.error-archive::after {
+  background: var(--blue);
+}
+
+.error-vellum {
+  background: var(--fg);
+}
+
+.error-vellum::before {
+  background: var(--bg);
+  box-shadow: 0 18px 0 var(--bg), 0 36px 0 var(--bg), 0 54px 0 var(--bg);
+}
+
+.error-vellum span {
+  color: var(--accent-ink) !important;
+}
+
+.error-vellum strong {
+  color: var(--accent-ink);
+}
+
+.trace-dark {
+  stroke: var(--surface-inset);
+}
+
+.trace-soft {
+  stroke: var(--fg);
+}
+
+.error-node {
+  background: var(--blue);
+  box-shadow: 0 0 0 7px var(--fg);
+}
+
+.node-two {
+  background: var(--surface-inset);
+}
+
+.node-three {
+  background: var(--fg);
+}
+
+.error-footer {
+  border-color: var(--line-strong);
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --soft: oklch(0.89 0.018 80);
+    --muted: oklch(0.82 0.02 78);
+    --dim: oklch(0.75 0.022 75);
+    --line: oklch(0.52 0.042 248);
+    --line-strong: oklch(0.66 0.048 245);
+  }
 }

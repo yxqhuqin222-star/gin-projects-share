@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-20",
+  "framework": "Next.js 16 with Vinext",
+  "font_stack": "system native with SF Pro and PingFang SC fallbacks",
+  "palette": "CSS custom properties in app/globals.css",
+  "motion": "motion-cut; CSS transitions only",
+  "spacing": "existing project spacing preserved",
+  "source": "app/globals.css"
+}
