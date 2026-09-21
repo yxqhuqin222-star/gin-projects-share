@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Counterscale from "./counterscale";
 import "./globals.css";
 
 const siteTitle = "Gin - 项目与分享";
@@ -50,7 +51,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Counterscale />
+      </body>
     </html>
   );
 }
